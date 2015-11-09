@@ -1,0 +1,1 @@
+test = arrayfun(@(x,y) reshape(topviewA(x:x+windowsize-1,y:y+windowsize-1),windowsize^2,1),p(:),q(:),'UniformOutput',false);

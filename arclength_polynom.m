@@ -1,0 +1,2 @@
+function length = arclength(a,b,c,x1,x2)
+length = (a*asinh((2*a^2*x2+a*b)/abs(a))+(2*a*abs(a)*x2+abs(a)*b)*sqrt(4*a^2*x2^2+4*a*b*x2+b^2+1))/(4*a*abs(a)) - (a*asinh((2*a^2*x1+a*b)/abs(a))+(2*a*abs(a)*x1+abs(a)*b)*sqrt(4*a^2*x1^2+4*a*b*x1+b^2+1))/(4*a*abs(a));
