@@ -443,62 +443,72 @@ function handles = rasterize(handles)
         list = 1:size(setuptable,1);        
     end
     
-    for i=list
+    tempsetuptable = setuptable;
+    errs = 0;
+    parfor i=list
         fprintf('Slice %d/%d\n',i,size(setuptable,1));
-%         second degree polynomial version
-%         [topcox,topcoy] = verdeling(setuptable{i,5}.topp(1),setuptable{i,5}.topp(2),setuptable{i,5}.topp(3),setuptable{i,5}.topareaxy(1,1), setuptable{i,5}.topareaxy(end,1),1000,handles.rastersegments);
-%         [midcox,midcoy] = verdeling(setuptable{i,5}.midp(1),setuptable{i,5}.midp(2),setuptable{i,5}.midp(3),setuptable{i,5}.midareaxy(1,1), setuptable{i,5}.midareaxy(end,1),1000,handles.rastersegments);
-%         [botcox,botcoy] = verdeling(setuptable{i,5}.botp(1),setuptable{i,5}.botp(2),setuptable{i,5}.botp(3),setuptable{i,5}.botareaxy(1,1), setuptable{i,5}.botareaxy(end,1),1000,handles.rastersegments);
-        
-%         own version *failed*
-%         [topcox,topcoy] = divide_drawed_curve(setuptable{i,5}.topx,setuptable{i,5}.topy,setuptable{i,5}.topareaxy(1,1),setuptable{i,5}.topareaxy(1,2), setuptable{i,5}.topareaxy(end,1),setuptable{i,5}.topareaxy(end,2),1,handles.rastersegments);
-%         [midcox,midcoy] = divide_drawed_curve(setuptable{i,5}.midp(1),setuptable{i,5}.midp(2),setuptable{i,5}.midp(3),setuptable{i,5}.midareaxy(1,1), setuptable{i,5}.midareaxy(end,1),1000,handles.rastersegments);
-%         [botcox,botcoy] = divide_drawed_curve(setuptable{i,5}.botp(1),setuptable{i,5}.botp(2),setuptable{i,5}.botp(3),setuptable{i,5}.botareaxy(1,1), setuptable{i,5}.botareaxy(end,1),1000,handles.rastersegments);
-        
-        %crop the curve to the outer areal borders
-        [topx,topy] = crop_curve(setuptable{i,5}.topx,setuptable{i,5}.topy,setuptable{i,5}.topareaxy(1,1),setuptable{i,5}.topareaxy(1,2), setuptable{i,5}.topareaxy(end,1),setuptable{i,5}.topareaxy(end,2));
-        [midx,midy] = crop_curve(setuptable{i,5}.midx,setuptable{i,5}.midy,setuptable{i,5}.midareaxy(1,1),setuptable{i,5}.midareaxy(1,2), setuptable{i,5}.midareaxy(end,1),setuptable{i,5}.midareaxy(end,2));
-        [botx,boty] = crop_curve(setuptable{i,5}.botx,setuptable{i,5}.boty,setuptable{i,5}.botareaxy(1,1),setuptable{i,5}.botareaxy(1,2), setuptable{i,5}.botareaxy(end,1),setuptable{i,5}.botareaxy(end,2));
-        
-        %segmentize the curve into x segments with x+1 lines with 1/20
-        %resolution
-        topcoxy = interparc(handles.rastersegments+1,topx(1:20:end),topy(1:20:end));
-        midcoxy = interparc(handles.rastersegments+1,midx(1:20:end),midy(1:20:end));
-        botcoxy = interparc(handles.rastersegments+1,botx(1:20:end),boty(1:20:end));
-        
-        setuptable{i,6}.segments =  handles.rastersegments;
-        setuptable{i,6}.topcoxy = topcoxy;
-        setuptable{i,6}.midcoxy = midcoxy;
-        setuptable{i,6}.botcoxy = botcoxy;
-        slicename = setuptable{i,3};
-        setuptable{i,6}.toparealrel = relativearealborders(topx,topy,setuptable{i,5}.topareaxy(:,1),setuptable{i,5}.topareaxy(:,2),topcoxy,handles.rastersegments,slicename);
-        setuptable{i,6}.midarealrel = relativearealborders(midx,midy,setuptable{i,5}.midareaxy(:,1),setuptable{i,5}.midareaxy(:,2),midcoxy,handles.rastersegments,slicename); 
-        setuptable{i,6}.botarealrel = relativearealborders(botx,boty,setuptable{i,5}.botareaxy(:,1),setuptable{i,5}.botareaxy(:,2),botcoxy,handles.rastersegments,slicename);
-        
-        if(handles.debug)
-            figure();
-            img = imread([setuptable{i,4} setuptable{i,3}]);
-            imshow(img);
-            hold on;
-            plot(topx,topy,'g-');
-            plot(midx,midy,'g-');
-            plot(botx,boty,'g-');
-            plot(topcoxy(:,1),topcoxy(:,2),'rx');
-            plot(midcoxy(:,1),midcoxy(:,2),'rx');
-            plot(botcoxy(:,1),botcoxy(:,2),'rx');
-            plot([topcoxy(:,1)'; midcoxy(:,1)'],[topcoxy(:,2)'; midcoxy(:,2)'],'b-');
-            plot([midcoxy(:,1)'; botcoxy(:,1)'],[midcoxy(:,2)'; botcoxy(:,2)'],'c-');
-            plot(setuptable{i,5}.topareaxy(:,1),setuptable{i,5}.topareaxy(:,2),'ro');
-            plot(setuptable{i,5}.midareaxy(:,1),setuptable{i,5}.midareaxy(:,2),'ro');
-            plot(setuptable{i,5}.botareaxy(:,1),setuptable{i,5}.botareaxy(:,2),'ro');
-            hold off;
-            figure(handles.fig_ISH_setup)
+        try
+            %         second degree polynomial version
+            %         [topcox,topcoy] = verdeling(setuptable{i,5}.topp(1),setuptable{i,5}.topp(2),setuptable{i,5}.topp(3),setuptable{i,5}.topareaxy(1,1), setuptable{i,5}.topareaxy(end,1),1000,handles.rastersegments);
+            %         [midcox,midcoy] = verdeling(setuptable{i,5}.midp(1),setuptable{i,5}.midp(2),setuptable{i,5}.midp(3),setuptable{i,5}.midareaxy(1,1), setuptable{i,5}.midareaxy(end,1),1000,handles.rastersegments);
+            %         [botcox,botcoy] = verdeling(setuptable{i,5}.botp(1),setuptable{i,5}.botp(2),setuptable{i,5}.botp(3),setuptable{i,5}.botareaxy(1,1), setuptable{i,5}.botareaxy(end,1),1000,handles.rastersegments);
+            
+            %         own version *failed*
+            %         [topcox,topcoy] = divide_drawed_curve(setuptable{i,5}.topx,setuptable{i,5}.topy,setuptable{i,5}.topareaxy(1,1),setuptable{i,5}.topareaxy(1,2), setuptable{i,5}.topareaxy(end,1),setuptable{i,5}.topareaxy(end,2),1,handles.rastersegments);
+            %         [midcox,midcoy] = divide_drawed_curve(setuptable{i,5}.midp(1),setuptable{i,5}.midp(2),setuptable{i,5}.midp(3),setuptable{i,5}.midareaxy(1,1), setuptable{i,5}.midareaxy(end,1),1000,handles.rastersegments);
+            %         [botcox,botcoy] = divide_drawed_curve(setuptable{i,5}.botp(1),setuptable{i,5}.botp(2),setuptable{i,5}.botp(3),setuptable{i,5}.botareaxy(1,1), setuptable{i,5}.botareaxy(end,1),1000,handles.rastersegments);
+            
+            %crop the curve to the outer areal borders
+            [topx,topy] = crop_curve(setuptable{i,5}.topx,setuptable{i,5}.topy,setuptable{i,5}.topareaxy(1,1),setuptable{i,5}.topareaxy(1,2), setuptable{i,5}.topareaxy(end,1),setuptable{i,5}.topareaxy(end,2));
+            [midx,midy] = crop_curve(setuptable{i,5}.midx,setuptable{i,5}.midy,setuptable{i,5}.midareaxy(1,1),setuptable{i,5}.midareaxy(1,2), setuptable{i,5}.midareaxy(end,1),setuptable{i,5}.midareaxy(end,2));
+            [botx,boty] = crop_curve(setuptable{i,5}.botx,setuptable{i,5}.boty,setuptable{i,5}.botareaxy(1,1),setuptable{i,5}.botareaxy(1,2), setuptable{i,5}.botareaxy(end,1),setuptable{i,5}.botareaxy(end,2));
+            
+            %segmentize the curve into x segments with x+1 lines with 1/20
+            %resolution
+            topcoxy = interparc(handles.rastersegments+1,topx(1:20:end),topy(1:20:end));
+            midcoxy = interparc(handles.rastersegments+1,midx(1:20:end),midy(1:20:end));
+            botcoxy = interparc(handles.rastersegments+1,botx(1:20:end),boty(1:20:end));
+            
+            tempsetuptable{i,6}.segments =  handles.rastersegments;
+            tempsetuptable{i,6}.topcoxy = topcoxy;
+            tempsetuptable{i,6}.midcoxy = midcoxy;
+            tempsetuptable{i,6}.botcoxy = botcoxy;
+            slicename = setuptable{i,3};
+            tempsetuptable{i,6}.toparealrel = relativearealborders(topx,topy,setuptable{i,5}.topareaxy(:,1),setuptable{i,5}.topareaxy(:,2),topcoxy,handles.rastersegments,slicename);
+            tempsetuptable{i,6}.midarealrel = relativearealborders(midx,midy,setuptable{i,5}.midareaxy(:,1),setuptable{i,5}.midareaxy(:,2),midcoxy,handles.rastersegments,slicename);
+            tempsetuptable{i,6}.botarealrel = relativearealborders(botx,boty,setuptable{i,5}.botareaxy(:,1),setuptable{i,5}.botareaxy(:,2),botcoxy,handles.rastersegments,slicename);
+            
+            if(handles.debug)
+                figure();
+                img = imread([setuptable{i,4} setuptable{i,3}]);
+                imshow(img);
+                hold on;
+                plot(topx,topy,'g-');
+                plot(midx,midy,'g-');
+                plot(botx,boty,'g-');
+                plot(topcoxy(:,1),topcoxy(:,2),'rx');
+                plot(midcoxy(:,1),midcoxy(:,2),'rx');
+                plot(botcoxy(:,1),botcoxy(:,2),'rx');
+                plot([topcoxy(:,1)'; midcoxy(:,1)'],[topcoxy(:,2)'; midcoxy(:,2)'],'b-');
+                plot([midcoxy(:,1)'; botcoxy(:,1)'],[midcoxy(:,2)'; botcoxy(:,2)'],'c-');
+                plot(setuptable{i,5}.topareaxy(:,1),setuptable{i,5}.topareaxy(:,2),'ro');
+                plot(setuptable{i,5}.midareaxy(:,1),setuptable{i,5}.midareaxy(:,2),'ro');
+                plot(setuptable{i,5}.botareaxy(:,1),setuptable{i,5}.botareaxy(:,2),'ro');
+                hold off;
+                figure(handles.fig_ISH_setup)
+            end
+        catch
+            fprintf('Error during slice %d/%d\n',i,size(setuptable,1));
+            errs = errs + 1;
         end
         
-        save([handles.savepath char(handles.savename) '.mat'],'setuptable');
-        handles.setuptable = setuptable;
-        guidata(handles.fig_ISH_setup,handles);
     end
+    fprintf('End parfor loop, %d errors\nSaving...',errs);
+    setuptable = tempsetuptable;
+    save([handles.savepath char(handles.savename) '.mat'],'setuptable');
+    handles.setuptable = setuptable;
+    guidata(handles.fig_ISH_setup,handles);
+    fprintf('saved.\n');
     
     handles.setuptable = setuptable;
     

@@ -376,6 +376,7 @@ function drawpermouse(hObject,handles,view)
         end
         lims = ylim;
         bregmasupra(i,:) = lims;
+        xlimsupra(i,:) = xlim;
         climsupra(i,:) = caxis;
         
         %infra
@@ -419,12 +420,16 @@ function drawpermouse(hObject,handles,view)
         end
         lims = ylim;
         bregmainfra(i,:) = lims;
+        xliminfra(i,:) = xlim;
         climinfra(i,:) = caxis;
     end
     set(figsubsupra,'Clim',[0 100]);
     set(figsubinfra,'Clim',[0 100]);
     set(figsubsupra,'Ylim',[min(bregmasupra(:,1)) max(bregmasupra(:,2))]);
     set(figsubinfra,'Ylim',[min(bregmainfra(:,1)) max(bregmainfra(:,2))]);
+    set(figsubsupra,'Xlim',[min(xlimsupra(:,1)) max(xlimsupra(:,2))]);
+    set(figsubsupra,'Xlim',[min(xlimsupra(:,1))*(1 - (sign(min(xlimsupra(:,1)))*0.03)) max(xlimsupra(:,2))*(1 + (sign(min(xlimsupra(:,1)))*0.03))]);
+    set(figsubinfra,'Xlim',[min(xliminfra(:,1))*(1 - (sign(min(xliminfra(:,1)))*0.03)) max(xliminfra(:,2))*(1 + (sign(min(xliminfra(:,1)))*0.03))]);
     set(figsupra,'Visible','on');
     set(figinfra,'Visible','on');
     guidata(hObject,handles);

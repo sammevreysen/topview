@@ -17,13 +17,13 @@ function plotPseudoTtest(topview,tail)
         set(fig,'PaperOrientation','landscape');
         set(fig,'PaperUnits','centimeters');
         set(fig,'PaperPositionMode','auto');
-        marg1 = [0.05 0.05];
-        marg2 = [0.1 0.05];
+        marg1 = [0.01 0.01];
+        marg2 = [0.01 0.05];
         
         cmenu = uicontextmenu;
         uimenu(cmenu, 'Label', 'Enlarge', 'Callback', @enlargesubplot);
         hMenu = uimenu(fig,'Label','Save');
-        uimenu(hMenu,'Label','Save as PDF...','Callback',{@saveFigAsPDF,gcf});
+        uimenu(hMenu,'Label','Save as PDF...','Callback',@saveFigAsPDF);
         hsp = zeros(rows,5);
         for i=1:rows
             condnames = topview.interconditions.(interconditions{i}).conditions;
@@ -34,7 +34,7 @@ function plotPseudoTtest(topview,tail)
             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title(['A: ' condnames{1}]);
-            colorbar('location','SouthOutside')
+            colorbar('location','EastOutside')
             
             hsp(i,2) = subplot_tight(rows,6,(i-1)*6+2,marg1);
             imagesc(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['xi_' suporinfra])(1,:)/100,topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['yi_' suporinfra])(:,1)/100,nan2white(topview.conditions.(condnames{2}).([suporinfra '_mean_interpol'])));
@@ -42,7 +42,7 @@ function plotPseudoTtest(topview,tail)
             plot(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['areas_' suporinfra])/100,topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title(['B: ' condnames{2}]);
-            colorbar('location','SouthOutside')
+            colorbar('location','EastOutside')
             
             hsp(i,3) = subplot_tight(rows,6,(i-1)*6+3,marg1);
             im = nan2white(nandarken(topview.interconditions.(interconditions{i}).(['topviewABdiff_relative_' suporinfra]),topview.interconditions.(interconditions{i}).(['nanmap_' suporinfra])));
@@ -53,7 +53,7 @@ function plotPseudoTtest(topview,tail)
             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title('A-B')
-            colorbar('location','SouthOutside')
+            colorbar('location','EastOutside')
             
             hsp(i,4) = subplot_tight(rows,6,(i-1)*6+4,marg1);
             im = nan2white(mat2im(topview.interconditions.(interconditions{i}).(['tstat_' suporinfra]),jet(1000)));
@@ -64,7 +64,7 @@ function plotPseudoTtest(topview,tail)
             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title('Pseudo T-test');
-            colorbar('location','SouthOutside')
+            colorbar('location','EastOutside')
             
             hsp(i,5) = subplot_tight(rows,6,(i-1)*6+5,marg2);
             switch tail
@@ -103,7 +103,7 @@ function plotPseudoTtest(topview,tail)
 %                 set(hsp(i,5),'Xlim',[xlim(1) 0]);
 %             end
             title('Tmax distribution');
-            hsp(i,6) = subplot_tight(rows,6,(i-1)*6+6,marg2);
+            hsp(i,6) = subplot_tight(rows,6,(i-1)*6+6,marg1);
             if(strcmp(tail,'2-tailed'))
                 tailstr = '1tailed_';
             else
@@ -113,7 +113,7 @@ function plotPseudoTtest(topview,tail)
             imagesc(topview.interconditions.(interconditions{i}).([suporinfra '_segments_interpol'])(1,:)/100,topview.interconditions.(interconditions{i}).([suporinfra '_bregmas_interpol'])(:,1)/100,im);
             set(gca,'Clim',[nanmin(topview.interconditions.(interconditions{i}).(['power_' tailstr suporinfra])(:)) nanmax(topview.interconditions.(interconditions{i}).(['power_' tailstr suporinfra])(:))]);
             title('Power pT-test');
-            colorbar('location','SouthOutside')
+            colorbar('location','EastOutside')
         end
         ylim = cell2mat(get(hsp(:,[1:4 6]),'Ylim'));
         set(hsp(:,[1:4 6]),'Ylim',[min(ylim(:,1)) max(ylim(:,2))]);
@@ -121,7 +121,14 @@ function plotPseudoTtest(topview,tail)
         set(hsp(:,1:2),'Clim',[min(clim(:,1)) max(clim(:,2))]);
         set(hsp(:,3),'Clim',[-1 1]);
         set(hsp(:,[1:4 6]),'DataAspectRatio',[1 1 1]);
+        pos = cell2mat(get(hsp(:,5),'Position'));
+        for k=1:size(hsp,1)
+            set(hsp(k,5),'Position',[pos(k,1) pos(k,2)+pos(k,4)*0.2 pos(k,3) pos(k,4)*0.6])
+        end
         set(hsp, 'Uicontextmenu',cmenu);
+        colormap(gcf,'jet');
+        set(findobj('Type','axes'),'FontSize',7)
+        set(hsp,'TitleFontSizeMultiplier',1);
 %         set(hsp,'YDir','normal');
     end
     

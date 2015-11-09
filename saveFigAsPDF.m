@@ -1,13 +1,14 @@
 function saveFigAsPDF(varargin)
 
-if(nargin == 0 || (nargin == 3 && ishandle(varargin{3})))
+if(nargin == 2 || (nargin == 5 && ishandle(varargin{5})))
     outerpos = [0 0 26 20];
     set(gcf,'PaperType','A4');
     set(gcf,'PaperOrientation','landscape');
     set(gcf,'PaperUnits','centimeters');
     set(gcf,'PaperPositionMode','auto');
+    set(gcf,'PaperSize',[26 20]);
 else
-    if(nargin >=3 & ishandle(varargin{3}))
+    if(nargin >=5 & ishandle(varargin{5}))
         outerpos = [0 0 varargin{4} varargin{5}];
     else
         outerpos = [0 0 varargin{1} varargin{2}];
@@ -41,6 +42,6 @@ if(nargin > 2)
     end
 end
 if(savename)
-    print(gcf,'-dpdf','-r300',[pdffolder savename]); %-dpdf
+    print(gcf,'-dpdf','-r72',[pdffolder savename]); %-dpdf 
 %     saveas(gcf,[pdffolder savename(1:end-3) 'fig'],'fig');
 end

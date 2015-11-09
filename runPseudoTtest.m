@@ -15,7 +15,7 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
 % 24-03-2015
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+    tic;
     %check if both conditions are from the same hemisphere %%%%CHANGE TO
     %MORE GENERIC FUNCTION
 %     if ~strcmp(condnameA(end-1:end),condnameB(end-1:end))
@@ -43,18 +43,23 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
     bregmas = ys(:,1);
     xa = topview.generalmodel.(hemisphere).(['areas_' suporinfra]);
     [xi yi] = meshgrid(min(xs(:)):max(xs(:)),min(ys(:)):max(ys(:)));
-    percentage = 0;
-    fprintf('%d%%',percentage);
+    %slice variables
+    N = size(perms,1);
+    Tmax_deactivation = zeros(1,N);
+    Tmax_activation = zeros(1,N);
+%     observed_condA_mean_interpol = cell(1);
+%     observed_segments_interpol = [];
+%     observed_bregmas_interpol = [];
+%     observed_mean_interpol = [];
+%     observed_topviewABdiff = [];
+%     observed_topviewABdiff_relative = [];
+%     observed_tstat = [];
+%     observed_nanmap = [];
+    %progress report
+    
+    parfor_progress(N);
 %     hfig = figure();
-    for jjj = 1:size(perms,1)
-%         spi(jjj) = subplot(4,5,jjj);
-        newpercentage = floor(jjj/size(perms,1)*100/20)*20;
-        if(newpercentage > percentage)
-            percentage = newpercentage;
-            fprintf('-%d%%',percentage);
-        end
-        permname = ['perm' num2str(jjj)];
-                
+    parfor jjj = 1:N
         %stack and align mice, interpolate per mouse, merge in condition and interpolate
         %condition A
         condA = nan(size(ys,1),size(xs,2),size(perms,2));
@@ -141,27 +146,37 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
         
         %Tmax value
 %         topview.interconditions.(conditioncombname).(['Tmax_2sided_' suporinfra])(jjj) = max(abs(tstat(:)));
-        topview.interconditions.(conditioncombname).(['Tmax_deactivation_' suporinfra])(jjj) = min(tstat(:));
-        topview.interconditions.(conditioncombname).(['Tmax_activation_' suporinfra])(jjj) = max(tstat(:));
+        Tmax_deactivation(jjj) = min(tstat(:));
+        Tmax_activation(jjj) = max(tstat(:));
         if jjj == 1
-            topview.conditions.(condnameA).([suporinfra '_mean_interpol']) = condA_mean_interpol;
-            topview.conditions.(condnameA).([suporinfra '_segments_interpol']) = xi;
-            topview.conditions.(condnameA).([suporinfra '_bregmas_interpol']) = yi;
-            topview.conditions.(condnameB).([suporinfra '_mean_interpol']) = condB_mean_interpol;
-            topview.conditions.(condnameB).([suporinfra '_segments_interpol']) = xi;
-            topview.conditions.(condnameB).([suporinfra '_bregmas_interpol']) = yi;
-            topview.interconditions.(conditioncombname).(['topviewABdiff_' suporinfra]) = topviewABdiff;
-            topview.interconditions.(conditioncombname).(['topviewABdiff_relative_' suporinfra]) = topviewABdiff./sum(topviewAB3D,3);
-            topview.interconditions.(conditioncombname).([suporinfra '_bregmas_interpol']) = yi;
-            topview.interconditions.(conditioncombname).([suporinfra '_segments_interpol']) = xi;
-            topview.interconditions.(conditioncombname).(['tstat_' suporinfra]) = tstat;
-            topview.interconditions.(conditioncombname).(['nanmap_' suporinfra]) = any(isnan(cat(3,condA_interpol,condB_interpol)),3);
+            observed_condA_mean_interpol(jjj,:,:) = condA_mean_interpol;
+            observed_segments_interpol(jjj,:,:) = xi;
+            observed_bregmas_interpol(jjj,:,:) = yi;
+            observed_condB_mean_interpol(jjj,:,:) = condB_mean_interpol;
+            observed_topviewABdiff(jjj,:,:) = topviewABdiff;
+            observed_topviewABdiff_relative(jjj,:,:) = topviewABdiff./sum(topviewAB3D,3);
+            observed_tstat(jjj,:,:) = tstat;
+            observed_nanmap(jjj,:,:) = any(isnan(cat(3,condA_interpol,condB_interpol)),3);
         end
+        %report progress
+        parfor_progress;
     end
-%     clim = cell2mat(get(spi,'CLim'));
-%     set(spi,'CLim',[min(clim(:,1)) max(clim(:,2))]);
-    topview.interconditions.(conditioncombname).(['Tmax_deactivation_' suporinfra]) = sort(topview.interconditions.(conditioncombname).(['Tmax_deactivation_' suporinfra]),'descend');
-    topview.interconditions.(conditioncombname).(['Tmax_activation_' suporinfra]) = sort(topview.interconditions.(conditioncombname).(['Tmax_activation_' suporinfra]));
+    %save observed condition
+    topview.conditions.(condnameA).([suporinfra '_mean_interpol']) = squeeze(observed_condA_mean_interpol);
+    topview.conditions.(condnameA).([suporinfra '_segments_interpol']) = squeeze(observed_segments_interpol);
+    topview.conditions.(condnameA).([suporinfra '_bregmas_interpol']) = squeeze(observed_bregmas_interpol);
+    topview.conditions.(condnameB).([suporinfra '_mean_interpol']) = squeeze(observed_condB_mean_interpol);
+    topview.conditions.(condnameB).([suporinfra '_segments_interpol']) = squeeze(observed_segments_interpol);
+    topview.conditions.(condnameB).([suporinfra '_bregmas_interpol']) = squeeze(observed_bregmas_interpol);
+    topview.interconditions.(conditioncombname).(['topviewABdiff_' suporinfra]) = squeeze(observed_topviewABdiff);
+    topview.interconditions.(conditioncombname).(['topviewABdiff_relative_' suporinfra]) = squeeze(observed_topviewABdiff_relative);
+    topview.interconditions.(conditioncombname).([suporinfra '_bregmas_interpol']) = squeeze(observed_bregmas_interpol);
+    topview.interconditions.(conditioncombname).([suporinfra '_segments_interpol']) = squeeze(observed_segments_interpol);
+    topview.interconditions.(conditioncombname).(['tstat_' suporinfra]) = squeeze(observed_tstat);
+    topview.interconditions.(conditioncombname).(['nanmap_' suporinfra]) = squeeze(observed_nanmap);
+    %calculate cutoff
+    topview.interconditions.(conditioncombname).(['Tmax_deactivation_' suporinfra]) = sort(Tmax_deactivation,'descend');
+    topview.interconditions.(conditioncombname).(['Tmax_activation_' suporinfra]) = sort(Tmax_activation);
     alpha = 0.05;
     topview.interconditions.(conditioncombname).criticalpos_1tailed = floor(alpha*size(perms,1))+1;
     topview.interconditions.(conditioncombname).criticalpos_2tailed = floor(alpha/2*size(perms,1))+1;
@@ -180,7 +195,10 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
     topview.interconditions.(conditioncombname).equalvariances = equalvariances;
     topview.interconditions.(conditioncombname).topview = true;
    
-    
+    %clean progress report
+    parfor_progress(0);
+    time = toc;
+    fprintf('Time elapsed %d seconds\n',round(time));
     
     
     
