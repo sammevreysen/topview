@@ -23,7 +23,7 @@ function varargout = ISH(varargin)
 
 % Edit the above text to modify the response to help ISH
 
-% Last Modified by GUIDE v2.5 15-Apr-2015 09:10:31
+% Last Modified by GUIDE v2.5 18-Nov-2015 10:58:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -97,7 +97,7 @@ handles.debug = 0;
 handles.showraster = 0;
 
 %option don't prepare to pivot
-handles.dontpivot = 'off';
+handles.dontpivot = 'on';
 
 % Update handles structure
 guidata(hObject, handles);
@@ -1659,7 +1659,9 @@ function reload_listbox(handles,select)
     
     set(handles.list_slices,'String',handles.setuptable(strcmp(handles.setuptable(:,1),cond(select(1))) & strcmp(handles.setuptable(:,2),mice(select(2))),3));
     set(handles.list_slices,'Value',select(3));
-    disp(handles.setuptable);
+    if(handles.debug)
+        disp(handles.setuptable);
+    end
 
 function setuptable = initiate_setuptable()
     borders.arealborder = [];
