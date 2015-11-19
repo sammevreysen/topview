@@ -23,7 +23,7 @@ function varargout = ISH(varargin)
 
 % Edit the above text to modify the response to help ISH
 
-% Last Modified by GUIDE v2.5 18-Nov-2015 10:58:10
+% Last Modified by GUIDE v2.5 18-Nov-2015 11:56:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,6 +52,18 @@ function ISH_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for ISH
 handles.output = hObject;
+
+%mac compatibility
+handles.mac = 'off';
+
+%debug option
+handles.debug = 0;
+
+%show raster
+handles.showraster = 0;
+
+%option don't prepare to pivot
+handles.dontpivot = 'on';
 
 %Initiate setuptable and load listboxes
 handles.setuptable = initiate_setuptable();
@@ -86,18 +98,6 @@ handles.rastersegments = str2double(get(handles.edit_segments,'String'));
 
 %graph clear
 axis off;
-
-%mac compatibility
-handles.mac = 'off';
-
-%debug option
-handles.debug = 0;
-
-%show raster
-handles.showraster = 0;
-
-%option don't prepare to pivot
-handles.dontpivot = 'on';
 
 % Update handles structure
 guidata(hObject, handles);
@@ -2136,13 +2136,15 @@ function edit_segments_Callback(hObject, eventdata, handles)
     handles.rastersegments = str2double(get(handles.edit_segments,'String'));
     guidata(hObject,handles);
 
-function debug_Callback(hObject, eventdata, handles)
+function menu_debug_Callback(hObject, eventdata, handles)
     if(strcmp(get(hObject,'Checked'),'on'))
-        handles.debug = 'off';
+        handles.debug = 0;
+        tmp = 'off';
     else
-        handles.debug = 'on';
+        handles.debug = 1;
+        tmp = 'on';
     end
-    set(hObject,'Checked',handles.debug);
+    set(hObject,'Checked',tmp);
     fprintf('Debug mode %s\n',handles.debug);
     guidata(hObject,handles);
 
