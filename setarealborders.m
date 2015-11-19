@@ -6,7 +6,8 @@ function [areax, areay] = setarealborders(x,y,n)
     userdata.h = h;
     userdata.x = xy(:,1);
     userdata.y = xy(:,2);
-    userdata.list = [];
+    
+    userdata.list = {};
     userdata.n = n;
     %userdata.dt = delaunay(x,y);
     userdata.dt = DelaunayTri(x,y);
@@ -19,8 +20,8 @@ function [areax, areay] = setarealborders(x,y,n)
     set(gcf, 'WindowButtonDownFcn', []);
     set(gcf, 'KeyPressFcn', []);
     userdata = get(gcf, 'UserData');
-    areax = userdata.list(:,1);
-    areay = userdata.list(:,2);
+    areax = cell2mat(userdata.list(:,1));
+    areay = cell2mat(userdata.list(:,2));
 
 function mouseMove (object, eventdata)
 userdata = get(gcf,'UserData');
@@ -36,7 +37,7 @@ function mouseClick(object, eventdata)
     userdata = get(gcf,'UserData');    
     X = get(userdata.h,'XDATA');
     Y = get(userdata.h,'YDATA');
-    userdata.list = [userdata.list; X Y userdata.h];
+    userdata.list = [userdata.list; {X} {Y} {userdata.h}];
     set(userdata.h,'MarkerEdgeColor','b');
     if(size(userdata.list,1) < userdata.n) 
         userdata.h = plot(X,Y,'rd');
@@ -50,7 +51,7 @@ function keyPress(src,event)
     if(strcmp(event.Key,'backspace'))
         userdata = get(gcf,'UserData');
         if(size(userdata.list,1) > 0)
-            h = userdata.list(end,3);
+            h = userdata.list{end,3};
             delete(h);
             userdata.list(end,:) = [];
             set(gcf,'UserData',userdata);
