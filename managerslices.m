@@ -254,7 +254,17 @@ function pushmice_Callback(hObject, eventdata, handles)
         handles.hash = newhash;
         saveProject(handles,'setuptable');
     end
-    managermice({handles.projectname});
+    %check if all midlines were set
+    checklist = ones(size(handles.setuptable,1),1);
+    for i=1:size(handles.setuptable,1)
+        if(~isfield(handles.setuptable{i,5},'midlinep'))
+            checklist(i) = 0;
+            fprintf('Midline not set for slice %d\n',i);
+        end
+    end
+    if(all(checklist))
+        managermice({handles.projectname});
+    end
     guidata(hObject,handles);
 
 
