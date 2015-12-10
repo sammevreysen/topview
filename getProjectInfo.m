@@ -24,4 +24,6 @@ function getProjectInfo(varargin)
     fprintf('==== Project Information ====\n');
     fprintf('Name: %s\nFolder: %s\n\n',name,folder);
     fprintf('No of slices: %d\nNo of conditions: %d\nNo of Mice: %d\n\n',size(setuptable,1),size(unique(setuptable(:,1)),1),size(unique(setuptable(:,2)),1));
+    fprintf('No of segmented slices: %d/%d\n',sum(cellfun(@(x) isfield(x,'topcoxy'),setuptable(:,6))), size(setuptable,1));
+    fprintf('No of slices with measured OD: %d/%d\n',sum(cellfun(@(x) isfield(x,'meansupra'),setuptable(:,6))), size(setuptable,1));
     fprintf('Midline registered: %d/%d\n\n',sum(cellfun(@(x) isfield(x,'midlinep'),setuptable(:,5))), size(setuptable,1));

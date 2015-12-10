@@ -445,8 +445,8 @@ function handles = rasterize(handles)
     
     tempsetuptable = setuptable;
     errs = 0;
+    parfor_progress(length(list));
     parfor i=list
-        fprintf('Slice %d/%d\n',i,size(setuptable,1));
         try
             %         second degree polynomial version
             %         [topcox,topcoy] = verdeling(setuptable{i,5}.topp(1),setuptable{i,5}.topp(2),setuptable{i,5}.topp(3),setuptable{i,5}.topareaxy(1,1), setuptable{i,5}.topareaxy(end,1),1000,handles.rastersegments);
@@ -501,8 +501,9 @@ function handles = rasterize(handles)
             fprintf('Error during slice %d/%d\n',i,size(setuptable,1));
             errs = errs + 1;
         end
-        
+        parfor_progress;
     end
+    parfor_progress(0);
     fprintf('End parfor loop, %d errors\nSaving...',errs);
     setuptable = tempsetuptable;
     save([handles.savepath char(handles.savename) '.mat'],'setuptable');
