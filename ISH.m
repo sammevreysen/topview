@@ -23,7 +23,7 @@ function varargout = ISH(varargin)
 
 % Edit the above text to modify the response to help ISH
 
-% Last Modified by GUIDE v2.5 18-Nov-2015 11:56:14
+% Last Modified by GUIDE v2.5 16-Dec-2015 12:22:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -265,7 +265,11 @@ function handles = delSlice(handles)
     end
 
 function borders = setBordersSlice(filename,path, handles)
-    slicefig = figure();
+    if(ishandle(handles.hfigselslice))
+        handles.hfigselslice = figure(handles.hfigselslice);
+    else
+        handles.hfigselslice = figure();
+    end
     img = imread([char(path) char(filename)]);
     if(size(img,3) > 1)
         imshow(img(:,:,1));
@@ -277,7 +281,7 @@ function borders = setBordersSlice(filename,path, handles)
     
     %Top border
     title('Draw the top border of the cortex');
-    [topx,topy] = draw_curve(slicefig); %selectpoints(); 
+    [topx,topy] = draw_curve(handles.hfigselslice); %selectpoints(); 
 %     tmp = sortrows([topx topy]);
 %     topx = tmp(:,1);
 %     topy = tmp(:,2);
@@ -288,7 +292,7 @@ function borders = setBordersSlice(filename,path, handles)
 
     %supra-infra border
     title('Draw the supra-infragranular border of the cortex');
-    [midx,midy] = draw_curve(slicefig); %selectpoints();
+    [midx,midy] = draw_curve(handles.hfigselslice); %selectpoints();
 %     tmp = sortrows([midx,midy]);
 %     midx = tmp(:,1);
 %     midy = tmp(:,2);
@@ -299,7 +303,7 @@ function borders = setBordersSlice(filename,path, handles)
     
     %bottom border
     title('Draw the bottom border of the cortex');
-    [botx,boty] = draw_curve(slicefig); %selectpoints();
+    [botx,boty] = draw_curve(handles.hfigselslice); %selectpoints();
 %     tmp = sortrows([botx,boty]);
 %     botx = tmp(:,1);
 %     boty = tmp(:,2);
@@ -331,7 +335,7 @@ function borders = setBordersSlice(filename,path, handles)
             if(handles.debug)
                 figure();
                 plot(xywindow(:,1),xywindow(:,2),'bx-',midareax(i),midareay(i),'ro');
-                figure(slicefig);
+                figure(handles.hfigselslice);
             end
             midx = [midx(1:pid-2); xywindow(:,1); midx(pid+2:end)];
             midy = [midy(1:pid-2); xywindow(:,2); midy(pid+2:end)];
@@ -358,7 +362,7 @@ function borders = setBordersSlice(filename,path, handles)
     hold off;
     
     %close image
-    close(slicefig);
+    close(handles.hfigselslice);
     
     %return border values
     borders.topareaxy = [topareax topareay];
@@ -514,7 +518,19 @@ function handles = rasterize(handles)
     handles.setuptable = setuptable;
     
     handles = verificate_segmentation(handles);
-    fprintf('Slices rasterized.\n');
+    fprintf('Slices rasterized.\n\n');
+    
+    idx = hasIntersectingSegments(handles.setuptable(segmented,:));
+    if(isempty(idx))
+        fprintf('All slices are segmented correctly.\n');
+    else
+        fprintf('%d/%d slices are not segmented correctly:\n',numel(idx),sum(segmented));
+        for i=1:length(idx)
+            fprintf('%s - %s - %s\n',handles.setuptable{idx(i),1},handles.setuptable{idx(i),2},handles.setuptable{idx(i),3});
+        end
+        msgbox(sprintf('%d slices are not segmented correctly. Please check the Command Window.',numel(idx)));
+    end
+    fprintf('\n');
     
     if(strcmp(handles.dontpivot,'off'))
         fprintf('Prepairing raster for pivoting...\n');
@@ -1846,66 +1862,18 @@ function menu_fixwin_Callback(hObject, eventdata, handles)
     warndlg(sprintf('Fixed %d filenames for Mac compatibility. Save your project now.',fixed),'Mac compatibility');
    
 function menu_showselslice_Callback(hObject, eventdata, handles)
-    if(~isfield(handles,'hfigselslice'))
-        handles.hfigselslice = figure();
-    end
     setuptable = handles.setuptable;
     slices = get(handles.list_slices,'String');
-    slice = slices(get(handles.list_slices,'Value'));
+    slice = slices{get(handles.list_slices,'Value')};
     mice = get(handles.list_mice,'String');
     mouse = mice(get(handles.list_mice,'Value'));
     conditions = get(handles.list_cond,'String');
     cond = conditions(get(handles.list_cond,'Value'));
-    imgid = find(strcmp(setuptable(:,1),cond) & strcmp(setuptable(:,2),mouse) & strcmp(setuptable(:,3),slice));
-    if(isfield(setuptable{imgid,6},'pivot'))
-        pivot = setuptable{imgid,6}.pivot;
-        
-        if(pivot == 0)
-            topcox = handles.setuptable{imgid,6}.topcoxy(:,1);
-            topcoy = handles.setuptable{imgid,6}.topcoxy(:,2);
-            midtcox = handles.setuptable{imgid,6}.midcoxy(:,1);
-            midtcoy = handles.setuptable{imgid,6}.midcoxy(:,2);
-            midbcox = midtcox;
-            midbcoy = midtcoy;
-            botcox = handles.setuptable{imgid,6}.botcoxy(:,1);
-            botcoy = handles.setuptable{imgid,6}.botcoxy(:,2);
-        else
-            topcox = handles.setuptable{imgid,6}.(['toppiv' num2str(pivot) 'coxy'])(:,1);
-            topcoy = handles.setuptable{imgid,6}.(['toppiv' num2str(pivot) 'coxy'])(:,2);
-            midtcox = handles.setuptable{imgid,6}.(['midtpiv' num2str(pivot) 'coxy'])(:,1);
-            midtcoy = handles.setuptable{imgid,6}.(['midtpiv' num2str(pivot) 'coxy'])(:,2);
-            midbcox = handles.setuptable{imgid,6}.(['midbpiv' num2str(pivot) 'coxy'])(:,1);
-            midbcoy = handles.setuptable{imgid,6}.(['midbpiv' num2str(pivot) 'coxy'])(:,2);
-            botcox = handles.setuptable{imgid,6}.(['botpiv' num2str(pivot) 'coxy'])(:,1);
-            botcoy = handles.setuptable{imgid,6}.(['botpiv' num2str(pivot) 'coxy'])(:,2);
-        end
-        
-        handles.hfigselslice = figure(handles.hfigselslice);
-        img = imread([setuptable{imgid,4} setuptable{imgid,3}]);
-        imshow(img);
-        hold on;
-        plot([topcox'; midtcox'],[topcoy'; midtcoy'],'b-');
-        plot([midbcox'; botcox'],[midbcoy'; botcoy'],'c-');
-        plot(setuptable{imgid,5}.topareaxy(:,1),setuptable{imgid,5}.topareaxy(:,2),'ro');
-        plot(setuptable{imgid,5}.midareaxy(:,1),setuptable{imgid,5}.midareaxy(:,2),'ro');
-        plot(setuptable{imgid,5}.botareaxy(:,1),setuptable{imgid,5}.botareaxy(:,2),'ro');
-        if(isfield(setuptable{imgid,5},'meanbgcoordinates'))
-            plot(setuptable{imgid,5}.meanbgcoordinates([1 2 2 1 1],1),setuptable{imgid,5}.meanbgcoordinates([1 1 2 2 1],2),'g-');
-        end
-        hold off;
+    imgid = strcmp(setuptable(:,1),cond) & strcmp(setuptable(:,2),mouse) & strcmp(setuptable(:,3),slice);
+    if(isfield(handles,'hfigselslice'))
+        handles.hfigselslice = showSlice(setuptable(imgid,:),handles.hfigselslice);
     else
-        handles.hfigselslice = figure(handles.hfigselslice);
-        img = imread([setuptable{imgid,4} setuptable{imgid,3}]);
-        imshow(img);
-        hold on;
-        plot(setuptable{imgid,5}.topx(1:100:end),setuptable{imgid,5}.topy(1:100:end),'b-');
-        plot(setuptable{imgid,5}.midx(1:100:end),setuptable{imgid,5}.midy(1:100:end),'b-');
-        plot(setuptable{imgid,5}.botx(1:100:end),setuptable{imgid,5}.boty(1:100:end),'b-');
-        plot(setuptable{imgid,5}.topareaxy(:,1),setuptable{imgid,5}.topareaxy(:,2),'ro');
-        plot(setuptable{imgid,5}.midareaxy(:,1),setuptable{imgid,5}.midareaxy(:,2),'ro');
-        plot(setuptable{imgid,5}.botareaxy(:,1),setuptable{imgid,5}.botareaxy(:,2),'ro');
-        plot(setuptable{imgid,5}.meanbgcoordinates([1 2 2 1 1],1),setuptable{imgid,5}.meanbgcoordinates([1 1 2 2 1],2),'g-');
-        hold off;
+        handles.hfigselslice = showSlice(setuptable(imgid,:));
     end
     guidata(hObject,handles);
 
@@ -2012,11 +1980,33 @@ if(strcmp(get(handles.fig_ISH_setup,'SelectionType'),'open'))
    cond = conditions(get(handles.list_cond,'Value'));
    mice = get(handles.list_mice,'String');
    mouse = mice(get(handles.list_mice,'Value'));
-   path = handles.setuptable(strcmp(handles.setuptable(:,1),cond) & strcmp(handles.setuptable(:,2),mouse) & strcmp(handles.setuptable(:,3),filename),4);
-   borders = setBordersSlice(filename, path,handles);
-   %if succesfull store in setuptable
-   handles.setuptable{strcmp(handles.setuptable(:,1),cond) & strcmp(handles.setuptable(:,2),mouse) & strcmp(handles.setuptable(:,3),filename),5} = borders;
-   handles.setuptable{strcmp(handles.setuptable(:,1),cond) & strcmp(handles.setuptable(:,2),mouse) & strcmp(handles.setuptable(:,3),filename),6} = [];
+   id = strcmp(handles.setuptable(:,1),cond) & strcmp(handles.setuptable(:,2),mouse) & strcmp(handles.setuptable(:,3),filename);
+   setuptablerow = handles.setuptable(id,:);
+   path = setuptablerow(4);
+   %show stored information
+   if(isfield(handles,'hfigselslice'))
+       handles.hfigselslice = showSlice(setuptablerow,handles.hfigselslice);
+   else
+       handles.hfigselslice = showSlice(setuptablerow);
+   end
+   title('Retrace this slice? Press Enter to continue, Escape to cancel.');
+   set(handles.hfigselslice,'KeyPressFcn', @escapekeypress);
+   uiwait;
+   if(ishandle(handles.hfigselslice))
+       borders = setBordersSlice(filename, path,handles);
+       %if succesfull store in setuptable
+       %store midline if set
+       if(isfield(handles.setuptable{id,5},'midlinep'))
+           midlinep = handles.setuptable{id,5}.midlinep;
+           midlinept = handles.setuptable{id,5}.midlinept;
+           handles.setuptable{id,5} = borders;
+           handles.setuptable{id,5}.midlinep = midlinep;
+           handles.setuptable{id,5}.midlinept = midlinept;
+       else
+           handles.setuptable{id,5} = borders;
+       end
+       handles.setuptable{id,6} = [];
+   end
     
 end
 guidata(hObject,handles);
@@ -2626,3 +2616,29 @@ function menu_topviewGUI_Callback(hObject, eventdata, handles)
     guidata(hObject,handles);
     
     
+
+
+% --------------------------------------------------------------------
+function menu_validatesegmentation_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_validatesegmentation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    segmented = cellfun(@(x) isfield(x,'topcoxy'),handles.setuptable(:,6));
+    fprintf('No of segmented slices: %d/%d\n',sum(segmented), size(handles.setuptable,1));
+    idx = hasIntersectingSegments(handles.setuptable(segmented,:));
+    if(isempty(idx))
+        fprintf('All slices are correctly segmented.\n');
+    else
+        fprintf('%d/%d slices are not correctly segmented:\n',numel(idx),sum(segmented));
+        for i=1:length(idx)
+            fprintf('%s - %s - %s\n',handles.setuptable{idx(i),1},handles.setuptable{idx(i),2},handles.setuptable{idx(i),3});
+        end
+    end
+    fprintf('\n');
+    
+function escapekeypress(object, event)
+    if(strcmp(event.Key,'escape'))
+        close(gcf);
+    elseif(strcmp(event.Key,'return'))
+        uiresume();
+    end
