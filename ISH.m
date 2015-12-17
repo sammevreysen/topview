@@ -23,7 +23,7 @@ function varargout = ISH(varargin)
 
 % Edit the above text to modify the response to help ISH
 
-% Last Modified by GUIDE v2.5 16-Dec-2015 12:22:46
+% Last Modified by GUIDE v2.5 17-Dec-2015 13:56:13
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -450,7 +450,7 @@ function handles = rasterize(handles)
     tempsetuptable = setuptable;
     errs = 0;
     parfor_progress(length(list));
-    parfor i=list
+    for i=list
         try
             %         second degree polynomial version
             %         [topcox,topcoy] = verdeling(setuptable{i,5}.topp(1),setuptable{i,5}.topp(2),setuptable{i,5}.topp(3),setuptable{i,5}.topareaxy(1,1), setuptable{i,5}.topareaxy(end,1),1000,handles.rastersegments);
@@ -520,11 +520,11 @@ function handles = rasterize(handles)
     handles = verificate_segmentation(handles);
     fprintf('Slices rasterized.\n\n');
     
-    idx = hasIntersectingSegments(handles.setuptable(segmented,:));
+    idx = hasIntersectingSegments(handles.setuptable);
     if(isempty(idx))
         fprintf('All slices are segmented correctly.\n');
     else
-        fprintf('%d/%d slices are not segmented correctly:\n',numel(idx),sum(segmented));
+        fprintf('%d/%d slices are not segmented correctly:\n',numel(idx),size(setuptable,1));
         for i=1:length(idx)
             fprintf('%s - %s - %s\n',handles.setuptable{idx(i),1},handles.setuptable{idx(i),2},handles.setuptable{idx(i),3});
         end
@@ -2642,3 +2642,11 @@ function escapekeypress(object, event)
     elseif(strcmp(event.Key,'return'))
         uiresume();
     end
+
+
+% --------------------------------------------------------------------
+function menu_projectinformation_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_projectinformation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    getProjectInfo(handles.setuptable);
