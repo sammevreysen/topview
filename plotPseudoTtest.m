@@ -121,7 +121,11 @@ function plotPseudoTtest(topview,tail)
         set(hsp(:,1:2),'Clim',[min(clim(:,1)) max(clim(:,2))]);
         set(hsp(:,3),'Clim',[-1 1]);
         set(hsp(:,[1:4 6]),'DataAspectRatio',[1 1 1]);
-        pos = cell2mat(get(hsp(:,5),'Position'));
+        if(size(hsp,1) > 1)
+            pos = cell2mat(get(hsp(:,5),'Position'));
+        else
+            pos = get(hsp(5),'Position');
+        end
         for k=1:size(hsp,1)
             set(hsp(k,5),'Position',[pos(k,1) pos(k,2)+pos(k,4)*0.2 pos(k,3) pos(k,4)*0.6])
         end
