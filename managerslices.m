@@ -249,21 +249,23 @@ function pushmice_Callback(hObject, eventdata, handles)
     %handles.projectname = 'Samme-M-Eve-Ctrl-ME';
 %     handles = saveProject(handles);
     handles = checkselection(handles);
-    newhash = DataHash(handles.setuptable);
-    if(~strcmp(handles.hash,newhash))
-        handles.hash = newhash;
-        saveProject(handles,'setuptable');
-    end
-    %check if all midlines were set
-    checklist = ones(size(handles.setuptable,1),1);
-    for i=1:size(handles.setuptable,1)
-        if(~isfield(handles.setuptable{i,5},'midlinep'))
-            checklist(i) = 0;
-            fprintf('Midline not set for slice %d\n',i);
+    if(~hasDoubleEntries(handles.setuptable))
+        newhash = DataHash(handles.setuptable);
+        if(~strcmp(handles.hash,newhash))
+            handles.hash = newhash;
+            saveProject(handles,'setuptable');
         end
-    end
-    if(all(checklist))
-        managermice({handles.projectname});
+        %check if all midlines were set
+        checklist = ones(size(handles.setuptable,1),1);
+        for i=1:size(handles.setuptable,1)
+            if(~isfield(handles.setuptable{i,5},'midlinep'))
+                checklist(i) = 0;
+                fprintf('Midline not set for slice %d\n',i);
+            end
+        end
+        if(all(checklist))
+            managermice({handles.projectname});
+        end
     end
     guidata(hObject,handles);
 

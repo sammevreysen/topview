@@ -366,7 +366,7 @@ function drawpermouse(hObject,handles,view)
                 plot(zeros(1,size(handles.topview.mice.(handles.topview.micenames{i}).bregmas,1)),handles.topview.mice.(handles.topview.micenames{i}).bregmas/100,ls);
                 hold off;
         end
-        
+        colormap jet;
         set(figsubsupra(i), 'Uicontextmenu',cmenusupra);
         set(figsubsupra(i),'Tag','jet');
         if(strcmp(handles.topview.micenames{i},handles.topview.normalizetomouse))
@@ -410,7 +410,7 @@ function drawpermouse(hObject,handles,view)
                 plot(zeros(1,size(handles.topview.mice.(handles.topview.micenames{i}).bregmas,1)),handles.topview.mice.(handles.topview.micenames{i}).bregmas/100,ls);
                 hold off;
         end
-        
+        colormap jet;
         set(figsubinfra(i), 'Uicontextmenu',cmenuinfra);
         set(figsubinfra(i),'Tag','jet');
         if(strcmp(handles.topview.micenames{i},handles.topview.normalizetomouse))
