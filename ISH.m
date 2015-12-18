@@ -265,7 +265,9 @@ function handles = delSlice(handles)
     end
 
 function borders = setBordersSlice(filename,path, handles)
-    if(ishandle(handles.hfigselslice))
+    if(~isfield(handles,'hfigselslice'))
+        handles.hfigselslice = figure();
+    elseif(ishandle(handles.hfigselslice))
         handles.hfigselslice = figure(handles.hfigselslice);
     else
         handles.hfigselslice = figure();
