@@ -49,6 +49,7 @@ function handles = saveProject(handles,varargin)
         setuptable = handles.setuptable;
         metadata = updateSavedate(metadata,'setuptable',savedate);
         save([staticsavepath filesep projectname filesep 'setuptable'],'setuptable');
+        copyfile([pwd filesep staticsavepath filesep projectname filesep 'setuptable.mat'],[pwd filesep 'saved_analysis' filesep projectname '.mat']);
     end
     if(isfield(handles,'topview') & (ismember('topview',savelist) | saveall))
         topview = handles.topview;
