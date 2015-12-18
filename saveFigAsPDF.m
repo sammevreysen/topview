@@ -1,6 +1,6 @@
 function saveFigAsPDF(varargin)
 
-if(nargin == 2 || (nargin == 5 && ishandle(varargin{5})))
+if(nargin == 0 || nargin == 2 || (nargin == 5 && ishandle(varargin{5})))
     outerpos = [0 0 26 20];
     set(gcf,'PaperType','A4');
     set(gcf,'PaperOrientation','landscape');
@@ -42,6 +42,6 @@ if(nargin > 2)
     end
 end
 if(savename)
-    print(gcf,'-dpdf','-r72',[pdffolder savename]); %-dpdf 
+    print(gcf,'-dpdf','-r300',[pdffolder savename],'-opengl'); %-dpdf 
 %     saveas(gcf,[pdffolder savename(1:end-3) 'fig'],'fig');
 end
