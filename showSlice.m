@@ -61,3 +61,10 @@ function hfigselslice = showSlice(setuptablerow,varargin)
         plot(setuptablerow{5}.meanbgcoordinates([1 2 2 1 1],1),setuptablerow{5}.meanbgcoordinates([1 1 2 2 1],2),'g-');
         hold off;
     end
+    if(isfield(setuptablerow{5},'midlinep'))
+        hold on;
+        yl = ylim;
+        p = setuptablerow{5}.midlinep;
+        plot(polyval([1/p(1) -p(2)/p(1)],yl(1):0.1:yl(2)),yl(1):0.1:yl(2),'g-');
+        hold off;
+    end
