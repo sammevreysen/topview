@@ -521,6 +521,8 @@ function drawpercondition(hObject,handles,view)
     set(figsubinfra,'Clim',[0 100]);
 %     set(figsubsupra,'Ylim',[min(bregmasupra(:,1)) max(bregmasupra(:,2))]);
 %     set(figsubinfra,'Ylim',[min(bregmainfra(:,1)) max(bregmainfra(:,2))]);
+    colormap(figsupra,jet);
+    colormap(figinfra,jet);
     set(figsupra,'Visible','on');
     set(figinfra,'Visible','on');
     guidata(hObject,handles);
