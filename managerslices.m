@@ -250,11 +250,11 @@ function pushmice_Callback(hObject, eventdata, handles)
 %     handles = saveProject(handles);
     handles = checkselection(handles);
     if(~hasDoubleEntries(handles.setuptable))
-        newhash = DataHash(handles.setuptable);
-        if(~strcmp(handles.hash,newhash))
-            handles.hash = newhash;
-            saveProject(handles,'setuptable');
-        end
+%         newhash = DataHash(handles.setuptable);
+%         if(~strcmp(handles.hash,newhash))
+%             handles.hash = newhash;
+        saveProject(handles,'setuptable');
+%         end
         %check if all midlines were set
         checklist = ones(size(handles.setuptable,1),1);
         for i=1:size(handles.setuptable,1)
