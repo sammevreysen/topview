@@ -12,10 +12,11 @@ function v = movingFWHM(x,m)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %remove nan's in first dimension
-    a = x(~isnan(x(:,1)),:);
-    v = x;
+%     a = x(~isnan(x(:,1)),:);
+%     v = x;
     %apply moving FWHM filter and replace original values  
     K=inline('exp(-(x.^2+y.^2)/2/sig^2)');
     [dx,dy] = meshgrid(-floor(m/2):floor(m/2));
     weight = K(1,dx,dy)/sum(sum(K(1,dx,dy)));
-    v(~isnan(x(:,1)),:) = conv2(a,weight,'same');
+%     v(~isnan(x(:,1)),:) = conv2(a,weight,'same');
+    v = conv2(x,weight,'same');
