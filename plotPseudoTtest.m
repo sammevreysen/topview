@@ -29,7 +29,8 @@ function plotPseudoTtest(topview,tail)
             condnames = topview.interconditions.(interconditions{i}).conditions;
             
             hsp(i,1) = subplot_tight(rows,6,(i-1)*6+1,marg1);
-            imagesc(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['xi_' suporinfra])(1,:)/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['yi_' suporinfra])(:,1)/100,nan2white(topview.conditions.(condnames{1}).([suporinfra '_mean_interpol'])));
+            im = nan2white(mat2im(topview.conditions.(condnames{1}).([suporinfra '_mean_interpol']),jet(1000)));
+            imagesc(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['xi_' suporinfra])(1,:)/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['yi_' suporinfra])(:,1)/100,im);
             hold on;
             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
@@ -37,7 +38,8 @@ function plotPseudoTtest(topview,tail)
             colorbar('location','EastOutside')
             
             hsp(i,2) = subplot_tight(rows,6,(i-1)*6+2,marg1);
-            imagesc(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['xi_' suporinfra])(1,:)/100,topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['yi_' suporinfra])(:,1)/100,nan2white(topview.conditions.(condnames{2}).([suporinfra '_mean_interpol'])));
+            im = nan2white(mat2im(topview.conditions.(condnames{2}).([suporinfra '_mean_interpol']),jet(1000)));
+            imagesc(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['xi_' suporinfra])(1,:)/100,topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['yi_' suporinfra])(:,1)/100,im);
             hold on;
             plot(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['areas_' suporinfra])/100,topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
@@ -130,7 +132,7 @@ function plotPseudoTtest(topview,tail)
             set(hsp(k,5),'Position',[pos(k,1) pos(k,2)+pos(k,4)*0.2 pos(k,3) pos(k,4)*0.6])
         end
         set(hsp, 'Uicontextmenu',cmenu);
-        colormap(gcf,'jet');
+%         colormap(gcf,'jet');
         set(findobj('Type','axes'),'FontSize',7)
         set(hsp,'TitleFontSizeMultiplier',1);
 %         set(hsp,'YDir','normal');
