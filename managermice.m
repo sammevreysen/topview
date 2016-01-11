@@ -62,7 +62,7 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
         handles.(varfields{i}) = vars.(varfields{i});
     end    
     
-    if(nargin > 1)
+    if(nargin > 4)
         recreatetopview = varargin{2};
     else
         recreatetopview = false;
