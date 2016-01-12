@@ -206,12 +206,17 @@ function topview = interpolate_condition(topview,condition,suporinfra)
      %topview
      lr = {'left' 'right'};
      xs = topview.generalmodel.(topview.conditions.(condition).hemisphere).(['mask_' suporinfra]);
-     ys = repmat(topview.bregmas,1,size(xs,2));
+     ys = topview.generalmodel.(topview.conditions.(condition).hemisphere).bregmas;
      xi = topview.generalmodel.(topview.conditions.(condition).hemisphere).(['xi_' suporinfra]);
      yi = topview.generalmodel.(topview.conditions.(condition).hemisphere).(['yi_' suporinfra]);
-     v = topview.conditions.(condition).([suporinfra '_mean']);
+     v = nan(size(xs));
      vnnan = ismember(topview.bregmas,topview.conditions.(condition).bregmas);
-     tmp = griddata(xs(vnnan,:),ys(vnnan,:),v,xi,yi,'linear');
+     v(vnnan,:) = topview.conditions.(condition).([suporinfra '_mean']);
+     
+%      tmp = griddata(xs(vnnan,:),ys(vnnan,:),v,xi,yi,'linear');
+     tmp = griddata(xs,ys,v,xi,yi,'linear');
+     vinan = any(~isnan(tmp),2);
+     tmp([find(vinan,1,'first') find(vinan,1,'last')],:) = NaN;
      topview.conditions.(condition).(['topview_' suporinfra '_mean_interpol']) = tmp;
      topview.conditions.(condition).(['topview_' suporinfra '_xi']) = xi;
      topview.conditions.(condition).(['topview_' suporinfra '_yi']) = yi;
