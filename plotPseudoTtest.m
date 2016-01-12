@@ -27,10 +27,16 @@ function plotPseudoTtest(topview,tail)
         hsp = zeros(rows,5);
         for i=1:rows
             condnames = topview.interconditions.(interconditions{i}).conditions;
-            
+            x = topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['xi_' suporinfra])./100; %(1,:)
+            y = topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['yi_' suporinfra])./100; %(:,1)
             hsp(i,1) = subplot_tight(rows,6,(i-1)*6+1,marg1);
-            im = nan2white(mat2im(topview.conditions.(condnames{1}).([suporinfra '_mean_interpol']),jet(1000)));
-            imagesc(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['xi_' suporinfra])(1,:)/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['yi_' suporinfra])(:,1)/100,im);
+            im = topview.conditions.(condnames{1}).(['topview_' suporinfra '_mean_interpol']);
+%             im = mat2im(im,jet(1000));
+%             im = nan2white(im);
+            pcolor(x,y,im);
+            shading interp;
+            axis ij equal tight;
+%             imagesc(x,y,im);
             hold on;
             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
@@ -38,8 +44,11 @@ function plotPseudoTtest(topview,tail)
             colorbar('location','EastOutside')
             
             hsp(i,2) = subplot_tight(rows,6,(i-1)*6+2,marg1);
-            im = nan2white(mat2im(topview.conditions.(condnames{2}).([suporinfra '_mean_interpol']),jet(1000)));
-            imagesc(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['xi_' suporinfra])(1,:)/100,topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['yi_' suporinfra])(:,1)/100,im);
+            im = topview.conditions.(condnames{2}).(['topview_' suporinfra '_mean_interpol']);
+            pcolor(x,y,im);
+            shading interp;
+            axis ij equal tight;
+%             imagesc(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['xi_' suporinfra])(1,:)/100,topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['yi_' suporinfra])(:,1)/100,im);
             hold on;
             plot(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['areas_' suporinfra])/100,topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
@@ -47,8 +56,11 @@ function plotPseudoTtest(topview,tail)
             colorbar('location','EastOutside')
             
             hsp(i,3) = subplot_tight(rows,6,(i-1)*6+3,marg1);
-            im = nan2white(nandarken(topview.interconditions.(interconditions{i}).(['topviewABdiff_relative_' suporinfra]),topview.interconditions.(interconditions{i}).(['nanmap_' suporinfra])));
-            imagesc(topview.interconditions.(interconditions{i}).([suporinfra '_segments_interpol'])(1,:)/100,topview.interconditions.(interconditions{i}).([suporinfra '_bregmas_interpol'])(:,1)/100,im);
+            im = nandarken(topview.interconditions.(interconditions{i}).(['topviewABdiff_relative_' suporinfra]),topview.interconditions.(interconditions{i}).(['nanmap_' suporinfra]));
+            pcolor(x,y,im);
+            shading interp;
+            axis ij equal tight;
+%             imagesc(topview.interconditions.(interconditions{i}).([suporinfra '_segments_interpol'])(1,:)/100,topview.interconditions.(interconditions{i}).([suporinfra '_bregmas_interpol'])(:,1)/100,im);
             hold on;
             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             plot_contours(topview,interconditions{i},suporinfra,tail);
