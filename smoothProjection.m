@@ -1,4 +1,18 @@
-function [newprojection newp] = smoothProjection(projection,coxy,p)
+function newprojection = smoothProjection(projection,coxy,p)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% function smoothProjection smooths the lateral borders of the projection
+% by applying a weighted moving average and adapt the position of the
+% midline accordingly to fit the new boundries.
+%
+%   INPUT:  projection   - projection image
+%           coxy  - original coordinates midpoints for each segment
+%           p - midline definec by polynom vector
+%   OUTPUT: newprojection - smoothed projection
+%
+%   Samme Vreysen
+%   22/04/2015
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %     figure();
 %     plot(projection,repmat((1:size(projection,1))',1,size(projection,2)),'ko');
 %     hold on;
