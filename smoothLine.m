@@ -1,7 +1,7 @@
 function vout = smoothLine(vin,span)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function smoothLine smooths a vector using weighted moving average with
-% weight the reciproce of the relative 2nd differential
+% weight the complement of the relative 2nd differential
 %
 %   INPUT: vin   - input vector
 %          span  - the span of the moving average
