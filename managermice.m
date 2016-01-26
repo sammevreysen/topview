@@ -209,12 +209,12 @@ function topview = interpolate_condition(topview,condition,suporinfra)
      ys = topview.generalmodel.(topview.conditions.(condition).hemisphere).bregmas;
      xi = topview.generalmodel.(topview.conditions.(condition).hemisphere).(['xi_' suporinfra]);
      yi = topview.generalmodel.(topview.conditions.(condition).hemisphere).(['yi_' suporinfra]);
-     v = nan(size(xs));
+%      v = nan(size(xs));
      vnnan = ismember(topview.bregmas,topview.conditions.(condition).bregmas);
-     v(vnnan,:) = topview.conditions.(condition).([suporinfra '_mean']);
+     v = topview.conditions.(condition).([suporinfra '_mean']);
      
-%      tmp = griddata(xs(vnnan,:),ys(vnnan,:),v,xi,yi,'linear');
-     tmp = griddata(xs,ys,v,xi,yi,'linear');
+     tmp = griddata(xs(vnnan,:),ys(vnnan,:),v,xi,yi,'linear');
+%      tmp = griddata(xs,ys,v,xi,yi,'linear');
      vinan = any(~isnan(tmp),2);
      tmp([find(vinan,1,'first') find(vinan,1,'last')],:) = NaN;
      topview.conditions.(condition).(['topview_' suporinfra '_mean_interpol']) = tmp;
