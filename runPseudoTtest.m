@@ -41,10 +41,8 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
     xs = topview.generalmodel.(hemisphere).(['mask_' suporinfra]);
     ys = topview.generalmodel.(hemisphere).bregmas;
     bregmas = ys(:,1);
-%     xa = topview.generalmodel.(hemisphere).(['areas_' suporinfra]);
-%     [xi yi] = meshgrid(min(xs(:)):max(xs(:)),min(ys(:)):max(ys(:)));
-    xi = toview.generalmodel.(hemisphere).(['xi_' suporinfra]);
-    yi = toview.generalmodel.(hemisphere).(['yi_' suporinfra]);
+    xa = topview.generalmodel.(hemisphere).(['areas_' suporinfra]);
+    [xi yi] = meshgrid(min(xs(:)):max(xs(:)),min(ys(:)):max(ys(:)));
     %slice variables
     N = size(perms,1);
     Tmax_deactivation = zeros(1,N);
