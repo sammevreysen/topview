@@ -165,9 +165,11 @@ function topview = createTopviewFile(setuptable)
             xs = topview.generalmodel.(topview.mice.(mouse).hemisphere).(['mask_' suporinfra{h}]);
             ys = topview.generalmodel.(topview.mice.(mouse).hemisphere).bregmas;
             v = topview.mice.(mouse).(suporinfra{h}).*topview.mice.(mouse).(['normalizefactor_' suporinfra{h}]);
-            [xi yi] = meshgrid(min(xs(:)):max(xs(:)),min(ys(:)):max(ys(:)));
+            xi = topview.generalmodel.(topview.mice.(mouse).hemisphere).(['xi_' suporinfra{h}]);
+            yi = topview.generalmodel.(topview.mice.(mouse).hemisphere).(['yi_' suporinfra{h}]);
             vnnan = ismember(topview.generalmodel.(topview.mice.(mouse).hemisphere).bregmas(:,1),topview.mice.(mouse).bregmas);
             topview.mice.(mouse).([suporinfra{h} 'interpol_gm']) = griddata(xs(vnnan,:),ys(vnnan,:),v,xi,yi,'linear');
         end
     end
+    
 %     end
