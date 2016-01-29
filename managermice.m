@@ -22,7 +22,7 @@ function varargout = managermice(varargin)
 
 % Edit the above text to modify the response to help managermice
 
-% Last Modified by GUIDE v2.5 27-Mar-2015 18:08:58
+% Last Modified by GUIDE v2.5 28-Jan-2016 15:22:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -77,6 +77,7 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
         
     if(~isfield(handles,'topview') || recreatetopview)
         handles.topview = createTopviewFile(handles.setuptable);
+        saveProject(handles,'topview');
     end
         
     normalisation = arrayfun(@(x) isfield(handles.topview.mice.(x{:}),'normfactor_supra'),handles.mice,'UniformOutput',false);
@@ -96,8 +97,6 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
     if(~isnan(handles.topview.normalizetomouse))
         set(handles.popnormalize,'Value',find(ismember([{'None'}; handles.mice],handles.topview.normalizetomouse)));
     end
-    
-    saveProject(handles,'topview');
     
     % Choose default command line output for managermice
     handles.output = hObject;
@@ -122,7 +121,7 @@ function handles = selecttable(hObject,callbackdata)
         %supra
         ax(1) = subplot(1,2,1);
         suporinfra = 'supra';
-        handles.topview = interpolate_mouse(handles.topview,mouse,suporinfra);
+%         handles.topview = interpolate_mouse(handles.topview,mouse,suporinfra);
         imagesc(handles.topview.mice.(mouse).segmentsinterpol,handles.topview.mice.(mouse).bregmasinterpol,handles.topview.mice.(mouse).([suporinfra 'interpol']));
         hold on;
         plot(handles.topview.mice.(mouse).(['arearel' suporinfra 'interpol']),repmat(handles.topview.mice.(mouse).bregmasinterpol,1,areas),'k-');
@@ -131,7 +130,7 @@ function handles = selecttable(hObject,callbackdata)
         %infra
         ax(2) = subplot(1,2,2);
         suporinfra = 'infra';
-        handles.topview = interpolate_mouse(handles.topview,mouse,suporinfra);
+%         handles.topview = interpolate_mouse(handles.topview,mouse,suporinfra);
         imagesc(handles.topview.mice.(mouse).segmentsinterpol,handles.topview.mice.(mouse).bregmasinterpol,handles.topview.mice.(mouse).([suporinfra 'interpol']));
         hold on;
         plot(handles.topview.mice.(mouse).(['arearel' suporinfra 'interpol']),repmat(handles.topview.mice.(mouse).bregmasinterpol,1,5),'k-');
@@ -154,78 +153,6 @@ function handles = selecttable(hObject,callbackdata)
     end
     
     guidata(hObject,handles);
-    
-    
-function topview = interpolate_mouse(topview,mouse,suporinfra)
-    %interpolate data
-    [x y] = meshgrid(1:size(topview.mice.(mouse).(suporinfra),2),topview.mice.(mouse).bregmas);
-    [xi yi] = meshgrid(1:0.1:size(x,2),y(1):1:y(end)); %for rat and mice: 120µm sections, 10µm interpolation = 1unit
-    topview.mice.(mouse).([suporinfra 'interpol']) = interp2(x,y,topview.mice.(mouse).(suporinfra),xi,yi,'linear');
-    topview.mice.(mouse).segmentsinterpol = xi(1,:);
-    topview.mice.(mouse).bregmasinterpol = yi(:,1);
-    topview.mice.(mouse).segments = x(1,:);
-    %interpolate areas
-    [xa ya] = meshgrid(1:size(topview.mice.(mouse).(['arearel' suporinfra]),2),topview.mice.(mouse).bregmas);
-    [xai yai] = meshgrid(1:size(topview.mice.(mouse).(['arearel' suporinfra]),2),y(1):1:y(end));
-    topview.mice.(mouse).(['arearel' suporinfra 'interpol']) = interp2(xa,ya,topview.mice.(mouse).(['arearel' suporinfra]),xai,yai,'linear');
-    %extra smoothing
-    topview.mice.(mouse).(['arearel' suporinfra 'interpolsmooth']) = topview.mice.(mouse).arearelsuprainterpol;
-    
-function topview = interpolate_condition(topview,condition,suporinfra)
-     micelist = topview.conditions.(condition).mice;
-     arealborders = topview.arealborders;
-     bregmalist = [];
-     segments = 1:topview.segments;
-     for jjj = 1:size(micelist,1)
-         bregmalist = [bregmalist; topview.mice.(micelist{jjj}).bregmas];
-     end
-     bregmalist = unique(bregmalist);
-     topview.conditions.(condition).bregmas = bregmalist;
-     topview.conditions.(condition).segments = segments;
-     %stack and align all animal in matrix (bregmas x segments x
-     %animals)
-     topview.conditions.(condition).(suporinfra) = nan(size(bregmalist,1),size(segments,2),size(micelist,1));
-     topview.conditions.(condition).(['arearel' suporinfra]) = nan(size(bregmalist,1),arealborders,size(micelist,1));
-     for jjj = 1:size(micelist,1)
-         topview.conditions.(condition).(suporinfra)(ismember(bregmalist,topview.mice.(micelist{jjj}).bregmas),:,jjj) = topview.mice.(micelist{jjj}).(suporinfra).*topview.mice.(micelist{jjj}).(['normalizefactor_' suporinfra]);
-         topview.conditions.(condition).(['arearel' suporinfra])(ismember(bregmalist,topview.mice.(micelist{jjj}).bregmas),:,jjj) = topview.mice.(micelist{jjj}).(['arearel' suporinfra]);
-     end
-     topview.conditions.(condition).([suporinfra '_mean']) = nanmean(topview.conditions.(condition).(suporinfra),3);
-     topview.conditions.(condition).(['arearel' suporinfra '_mean']) = nanmean(topview.conditions.(condition).(['arearel' suporinfra]),3);
-     
-     %interpolate
-     %flatmount
-     [x y] = meshgrid(segments,topview.conditions.(condition).bregmas);
-     [xi yi] = meshgrid(1:0.1:size(x,2),y(1):1:y(end));
-     topview.conditions.(condition).([suporinfra '_mean_interpol']) = interp2(x,y,topview.conditions.(condition).([suporinfra '_mean']),xi,yi,'linear');
-     topview.conditions.(condition).segmentsinterpol = xi(1,:);
-     topview.conditions.(condition).bregmasinterpol = yi(:,1);
-     [xa ya] = meshgrid(1:topview.arealborders,bregmalist);
-     [xai yai] = meshgrid(1:topview.arealborders,ya(1):1:ya(end));
-     topview.conditions.(condition).(['arearel' suporinfra '_mean_interpol']) = interp2(xa,ya,topview.conditions.(condition).(['arearel' suporinfra '_mean']),xai,yai,'linear');
-     %topview
-     lr = {'left' 'right'};
-     xs = topview.generalmodel.(topview.conditions.(condition).hemisphere).(['mask_' suporinfra]);
-     ys = topview.generalmodel.(topview.conditions.(condition).hemisphere).bregmas;
-     xi = topview.generalmodel.(topview.conditions.(condition).hemisphere).(['xi_' suporinfra]);
-     yi = topview.generalmodel.(topview.conditions.(condition).hemisphere).(['yi_' suporinfra]);
-%      v = nan(size(xs));
-     vnnan = ismember(topview.bregmas,topview.conditions.(condition).bregmas);
-     v = topview.conditions.(condition).([suporinfra '_mean']);
-     
-     tmp = griddata(xs(vnnan,:),ys(vnnan,:),v,xi,yi,'linear');
-%      tmp = griddata(xs,ys,v,xi,yi,'linear');
-     vinan = any(~isnan(tmp),2);
-     tmp([find(vinan,1,'first') find(vinan,1,'last')],:) = NaN;
-     topview.conditions.(condition).(['topview_' suporinfra '_mean_interpol']) = tmp;
-     topview.conditions.(condition).(['topview_' suporinfra '_xi']) = xi;
-     topview.conditions.(condition).(['topview_' suporinfra '_yi']) = yi;
-     [xa ya] = meshgrid(1:topview.arealborders,topview.bregmas);
-     [xai yai] = meshgrid(1:topview.arealborders,min(ys(:)):max(ys(:)));
-     va = topview.generalmodel.(topview.conditions.(condition).hemisphere).(['areas_' suporinfra]);
-     topview.conditions.(condition).(['topview_area_' suporinfra '_mean_interpol']) = interp2(xa,ya,va,xai,yai,'linear');
-     topview.conditions.(condition).(['topview_area_' suporinfra '_xi']) = xai;
-     topview.conditions.(condition).(['topview_area_' suporinfra '_yi']) = yai;
 
 function [mask, normfactor] = definenormfactor(ax,data)
     set(gcf,'CurrentAxes',ax(1));
@@ -328,216 +255,138 @@ function uipanel1_SelectionChangeFcn(hObject, eventdata, handles)
     guidata(hObject,handles);
 
 function drawpermouse(hObject,handles,view)
-    figsupra = figure('Visible','off');
-    cmenusupra = uicontextmenu;
-    uimenu(cmenusupra, 'Label', 'Enlarge', 'Callback', @enlargesubplot);
-    hMenu = uimenu(figsupra,'Label','Save');
-    uimenu(hMenu,'Label','Save as PDF...','Callback',{@saveFigAsPDF,hObject});
-    figinfra = figure('Visible','off');
-    cmenuinfra = uicontextmenu;
-    uimenu(cmenuinfra, 'Label', 'Enlarge', 'Callback', @enlargesubplot);
-    hMenu = uimenu(figinfra,'Label','Save');
-    uimenu(hMenu,'Label','Save as PDF...','Callback',{@saveFigAsPDF,hObject})
-    for i=1:size(handles.topview.micenames,1)
-        %supra
-        figure(figsupra);
-        figsubsupra(i) = subplot(ceil(size(handles.topview.micenames,1)/4),min(size(handles.topview.micenames,1),4),i);
-        if(~isfield(handles.topview.mice.(handles.topview.micenames{i}),'normalizefactor_supra'))
-            handles = normalizemice(handles);
-        end
-        if(~isfield(handles.topview.mice.(handles.topview.micenames{i}),'segmentsinterpol'))
-            handles.topview = interpolate_mouse(handles.topview,handles.topview.micenames{i},'supra');
-            handles.topview = interpolate_mouse(handles.topview,handles.topview.micenames{i},'infra');
-        end
-        switch view
-            case 'flatmount'
-                imagesc(handles.topview.mice.(handles.topview.micenames{i}).segmentsinterpol,handles.topview.mice.(handles.topview.micenames{i}).bregmasinterpol/100,handles.topview.mice.(handles.topview.micenames{i}).suprainterpol.*handles.topview.mice.(handles.topview.micenames{i}).normalizefactor_supra);
-                hold on;
-                plot(handles.topview.mice.(handles.topview.micenames{i}).arearelsupra,handles.topview.mice.(handles.topview.micenames{i}).bregmas/100,'k-');
-                plot(ones(1,size(handles.topview.mice.(handles.topview.micenames{i}).bregmas,1)),handles.topview.mice.(handles.topview.micenames{i}).bregmas/100,'k>');
-                hold off;
-            case 'topview'
-                xs = handles.topview.mice.(handles.topview.micenames{i}).topcoxyprojected_smooth./handles.topview.pixpermm*100;
-                bregmas = handles.topview.mice.(handles.topview.micenames{i}).bregmas;
-                v = handles.topview.mice.(handles.topview.micenames{i}).supra.*handles.topview.mice.(handles.topview.micenames{i}).normalizefactor_supra;
-                ys = repmat(handles.topview.mice.(handles.topview.micenames{i}).bregmas,1,size(xs,2));
-                [xi yi] = meshgrid(min(xs(:)):max(xs(:)),min(bregmas(:)):max(bregmas(:))); %abs(min(min(xsupra),0)-max(max(xsupra),0))/500
-                suprainterpolprojected = griddata(xs,ys,v,xi,yi,'linear');
-                pcolor(xi/100,yi/100,suprainterpolprojected);
-                shading flat;
-                axis equal;
-                axis ij;
-                hold on;
-                plot(handles.topview.mice.(handles.topview.micenames{i}).topareaxyprojected_smooth/handles.topview.pixpermm,handles.topview.mice.(handles.topview.micenames{i}).bregmas/100,'k-');
-                if(xs < 0)
-                    ls = 'k<';
-                else
-                    ls = 'k>';
-                end
-                plot(zeros(1,size(handles.topview.mice.(handles.topview.micenames{i}).bregmas,1)),handles.topview.mice.(handles.topview.micenames{i}).bregmas/100,ls);
-                hold off;
-        end
+    suporinfra = handles.topview.suporinfra;    
+    for j=1:length(suporinfra)
+        fig(j) = figure('Visible','off');
         colormap jet;
-        set(figsubsupra(i), 'Uicontextmenu',cmenusupra);
-        set(figsubsupra(i),'Tag','jet');
-        if(strcmp(handles.topview.micenames{i},handles.topview.normalizetomouse))
-            title([handles.topview.micenames{i} ' - Supra (*)']);
-        else
-            title([handles.topview.micenames{i} ' - Supra']);
-        end
-        lims = ylim;
-        bregmasupra(i,:) = lims;
-        xlimsupra(i,:) = xlim;
-        climsupra(i,:) = caxis;
-        
-        %infra
-        figure(figinfra);
-        figsubinfra(i) = subplot(ceil(size(handles.topview.micenames,1)/4),min(size(handles.topview.micenames,1),4),i);
-        switch view
-            case 'flatmount'
-                imagesc(handles.topview.mice.(handles.topview.micenames{i}).segmentsinterpol,handles.topview.mice.(handles.topview.micenames{i}).bregmasinterpol,handles.topview.mice.(handles.topview.micenames{i}).infrainterpol.*handles.topview.mice.(handles.topview.micenames{i}).normalizefactor_infra);
-                hold on;
-                plot(handles.topview.mice.(handles.topview.micenames{i}).arearelinfra,handles.topview.mice.(handles.topview.micenames{i}).bregmas/100,'k-');
-                plot(ones(1,size(handles.topview.mice.(handles.topview.micenames{i}).bregmas,1)),handles.topview.mice.(handles.topview.micenames{i}).bregmas/100,'k>');
-                hold off;
-            case 'topview'
-                xs = handles.topview.mice.(handles.topview.micenames{i}).botcoxyprojected_smooth./handles.topview.pixpermm*100;
-                bregmas = handles.topview.mice.(handles.topview.micenames{i}).bregmas;
-                v = handles.topview.mice.(handles.topview.micenames{i}).infra.*handles.topview.mice.(handles.topview.micenames{i}).normalizefactor_infra;
-                ys = repmat(handles.topview.mice.(handles.topview.micenames{i}).bregmas,1,size(xs,2));
-                [xi yi] = meshgrid(min(xs(:)):max(xs(:)),min(bregmas(:)):max(bregmas(:))); %abs(min(min(xsupra),0)-max(max(xsupra),0))/500
-                suprainterpolprojected = griddata(xs,ys,v,xi,yi,'linear');
-                pcolor(xi/100,yi/100,suprainterpolprojected);
-                shading flat;
-                axis equal;
-                axis ij;
-                hold on;
-                plot(handles.topview.mice.(handles.topview.micenames{i}).botareaxyprojected_smooth/handles.topview.pixpermm,handles.topview.mice.(handles.topview.micenames{i}).bregmas/100,'k-');
-                if(xs < 0)
-                    ls = 'k<';
-                else
-                    ls = 'k>';
-                end
-                plot(zeros(1,size(handles.topview.mice.(handles.topview.micenames{i}).bregmas,1)),handles.topview.mice.(handles.topview.micenames{i}).bregmas/100,ls);
-                hold off;
-        end
-        colormap jet;
-        set(figsubinfra(i), 'Uicontextmenu',cmenuinfra);
-        set(figsubinfra(i),'Tag','jet');
-        if(strcmp(handles.topview.micenames{i},handles.topview.normalizetomouse))
-            title([handles.topview.micenames{i} ' - Infra (*)']);
-        else
-            title([handles.topview.micenames{i} ' - Infra']);
-        end
-        lims = ylim;
-        bregmainfra(i,:) = lims;
-        xliminfra(i,:) = xlim;
-        climinfra(i,:) = caxis;
+        cmenu(j) = uicontextmenu;
+        uimenu(cmenu(j), 'Label', 'Enlarge', 'Callback', @enlargesubplot);
+        hMenu = uimenu(fig(j),'Label','Save');
+        uimenu(hMenu,'Label','Save as PDF...','Callback',{@saveFigAsPDF,hObject});
     end
-    set(figsubsupra,'Clim',[0 100]);
-    set(figsubinfra,'Clim',[0 100]);
-    set(figsubsupra,'Ylim',[min(bregmasupra(:,1)) max(bregmasupra(:,2))]);
-    set(figsubinfra,'Ylim',[min(bregmainfra(:,1)) max(bregmainfra(:,2))]);
-    set(figsubsupra,'Xlim',[min(xlimsupra(:,1)) max(xlimsupra(:,2))]);
-    set(figsubsupra,'Xlim',[min(xlimsupra(:,1))*(1 - (sign(min(xlimsupra(:,1)))*0.03)) max(xlimsupra(:,2))*(1 + (sign(min(xlimsupra(:,1)))*0.03))]);
-    set(figsubinfra,'Xlim',[min(xliminfra(:,1))*(1 - (sign(min(xliminfra(:,1)))*0.03)) max(xliminfra(:,2))*(1 + (sign(min(xliminfra(:,1)))*0.03))]);
-    set(figsupra,'Visible','on');
-    set(figinfra,'Visible','on');
+   
+    for i=1:size(handles.topview.micenames,1)
+        mouse = handles.topview.micenames{i};
+        hemisphere = handles.topview.mice.(mouse).hemisphere;
+        for j=1:length(suporinfra)
+            figure(fig(j));
+            figsub(j,i) = subplot(ceil(size(handles.topview.micenames,1)/4),min(size(handles.topview.micenames,1),4),i);
+            if(~isfield(handles.topview.mice.(mouse),['normalizefactor_' suporinfra{j}]))
+                handles = normalizemice(handles);
+            end
+            %         if(~isfield(handles.topview.mice.(mouse),'segmentsinterpol'))
+            %             handles.topview = interpolate_mouse(handles.topview,mouse,'supra');
+            %             handles.topview = interpolate_mouse(handles.topview,mouse,'infra');
+            %         end
+            switch view
+                case 'flatmount'
+                    imagesc(handles.topview.mice.(mouse).segmentsinterpol,handles.topview.mice.(mouse).bregmasinterpol/100,handles.topview.mice.(mouse).([suporinfra 'interpol']) .* handles.topview.mice.(mouse).(['normalizefactor_' suporinfra]));
+                    hold on;
+                    plot(handles.topview.mice.(mouse).(['arearel' suporinfra{j}]),handles.topview.mice.(mouse).bregmas/100,'k-');
+                    plot(ones(1,size(handles.topview.mice.(mouse).bregmas,1)),handles.topview.mice.(mouse).bregmas/100,'k>');
+                    hold off;
+                case {'topview','topview_gm'}
+                    if(strcmp(view,'topview'))
+                        xs = handles.topview.mice.(mouse).([suporinfra{j} 'coxyprojected_smooth'])./handles.topview.pixpermm*100;
+                        bregmas = handles.topview.mice.(mouse).bregmas;
+                        v = handles.topview.mice.(mouse).(suporinfra{j}) .* handles.topview.mice.(mouse).(['normalizefactor_' suporinfra{j}]);
+                        ys = repmat(handles.topview.mice.(mouse).bregmas,1,size(xs,2));
+                        [xi,yi] = meshgrid(min(xs(:)):max(xs(:)),min(bregmas(:)):max(bregmas(:))); %abs(min(min(xsupra),0)-max(max(xsupra),0))/500
+                        interpolprojected = concave_griddata(xs,ys,v,xi,yi);
+                    else
+                        xi = handles.topview.generalmodel.(handles.topview.mice.(mouse).hemisphere).(['xi_' suporinfra{j}]);
+                        yi = handles.topview.generalmodel.(handles.topview.mice.(mouse).hemisphere).(['yi_' suporinfra{j}]);
+                        interpolprojected = handles.topview.mice.(mouse).([suporinfra{j} 'interpol_gm']);
+                    end
+                    pcolor_rgb(xi/100,yi/100,interpolprojected);
+                    hold on;
+                    if(strcmp(view,'topview'))
+                        plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,handles.topview.mice.(mouse).bregmas/100,'k-');
+                    else
+                        plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,handles.topview.bregmas/100,'k-');
+                    end
+                    if(all(xi < 0))
+                        ls = 'k<';
+                    else
+                        ls = 'k>';
+                    end
+                    plot(zeros(1,size(handles.topview.mice.(mouse).bregmas,1)),handles.topview.mice.(mouse).bregmas/100,ls);
+                    hold off;
+            end
+            
+            set(figsub(j,i), 'Uicontextmenu',cmenu(j));
+            set(figsub(j,i),'Tag','jet');
+            if(strcmp(mouse,handles.topview.normalizetomouse))
+                title([mouse ' - ' suporinfra{j} ' (*)']);
+            else
+                title([mouse ' - ' suporinfra{j}]);
+            end
+            ylims(j,i,:) = ylim;
+            xlims(j,i,:) = xlim;
+            clims(j,i,:) = caxis;
+        end
+        
+    end
+    ylims = reshape(ylims,[],2);
+    xlims = reshape(xlims,[],2);
+    clims = reshape(clims,[],2);
+    set(figsub,'Clim',[0 100]);
+    set(figsub,'Ylim',[min(ylims(:,1)) max(ylims(:,2))]);
+%     set(figsub,'Xlim',[min(xlims(:,1)) max(xlims(:,2))]);
+    set(figsub,'Xlim',[min(xlims(:,1))*(1 - (sign(min(xlims(:,1)))*0.03)) max(xlims(:,2))*(1 + (sign(min(xlims(:,1)))*0.03))]);
+    set(fig,'Visible','on');
     guidata(hObject,handles);
-    saveProject(handles,'topview');
+%     saveProject(handles,'topview');
         
 function drawpercondition(hObject,handles,view)
-    figsupra = figure('Visible','off');
-    cmenusupra = uicontextmenu;
-    uimenu(cmenusupra, 'Label', 'Enlarge', 'Callback', @enlargesubplot);
-    hMenu = uimenu(figsupra,'Label','Save');
-    uimenu(hMenu,'Label','Save as PDF...','Callback',{@saveFigAsPDF,hObject});
-    figinfra = figure('Visible','off');
-    cmenuinfra = uicontextmenu;
-    uimenu(cmenuinfra, 'Label', 'Enlarge', 'Callback', @enlargesubplot);
-    hMenu = uimenu(figinfra,'Label','Save');
-    uimenu(hMenu,'Label','Save as PDF...','Callback',{@saveFigAsPDF,hObject})
+    suporinfra = handles.topview.suporinfra;    
+    for j=1:length(suporinfra)
+        fig(j) = figure('Visible','off');
+        colormap jet;
+        cmenu(j) = uicontextmenu;
+        uimenu(cmenu(j), 'Label', 'Enlarge', 'Callback', @enlargesubplot);
+        hMenu = uimenu(fig(j),'Label','Save');
+        uimenu(hMenu,'Label','Save as PDF...','Callback',@saveFigAsPDF);
+    end
     for i=1:size(handles.topview.conditionnames,1)
         condition = handles.topview.conditionnames{i};
-        handles.topview = interpolate_condition(handles.topview,condition,'supra');
-        handles.topview = interpolate_condition(handles.topview,condition,'infra');
         marg = [0.05 0.05];
-        switch view
-            case 'flatmount'
-                figure(figsupra);
-                figsubsupra(i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
-                imagesc(handles.topview.conditions.(condition).segmentsinterpol,handles.topview.conditions.(condition).bregmasinterpol,handles.topview.conditions.(condition).supra_mean_interpol);
-                hold on;
-                plot(handles.topview.conditions.(condition).arearelsupra_mean_interpol,handles.topview.conditions.(condition).bregmasinterpol,'k-');
-                plot(ones(size(handles.topview.conditions.(condition).bregmas,1),1),handles.topview.conditions.(condition).bregmas,'k>');
-                hold off;
-                set(figsubsupra(i), 'Uicontextmenu',cmenusupra);
-                set(figsubsupra(i),'Tag','jet');
-                title([condition ' - Supra']);
-                lims = ylim;
-                bregmasupra(i,:) = lims;
-                climsupra(i,:) = caxis;
-                
-                figure(figinfra);
-                figsubinfra(i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
-                imagesc(handles.topview.conditions.(condition).segmentsinterpol,handles.topview.conditions.(condition).bregmasinterpol,handles.topview.conditions.(condition).infra_mean_interpol);
-                hold on;
-                plot(handles.topview.conditions.(condition).arearelinfra_mean_interpol,handles.topview.conditions.(condition).bregmasinterpol,'k-');
-                plot(ones(size(handles.topview.conditions.(condition).bregmas,1),1),handles.topview.conditions.(condition).bregmas,'k>');
-                hold off;
-                set(figsubinfra(i), 'Uicontextmenu',cmenuinfra);
-                set(figsubinfra(i),'Tag','jet');
-                title([condition ' - Infra']);
-                lims = ylim;
-                bregmainfra(i,:) = lims;
-                climinfra(i,:) = caxis;
-            case 'topview'
-                figure(figsupra);
-                figsubsupra(i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
-                pcolor(handles.topview.conditions.(condition).topview_supra_xi/100,handles.topview.conditions.(condition).topview_supra_yi/100,handles.topview.conditions.(condition).topview_supra_mean_interpol);
-                shading flat;
-                axis equal;
-                axis ij;
-                hold on;
-                plot(handles.topview.conditions.(condition).topview_area_supra_mean_interpol/100,handles.topview.conditions.(condition).topview_area_supra_yi/100,'k-');
-                hold off;
-                set(figsubsupra(i), 'Uicontextmenu',cmenusupra);
-                set(figsubsupra(i),'Tag','jet');
-                title([condition ' - Supra']);
-                lims = ylim;
-                bregmasupra(i,:) = lims;
-                climsupra(i,:) = caxis;
-                
-                figure(figinfra);
-                figsubinfra(i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
-                pcolor(handles.topview.conditions.(condition).topview_infra_xi/100,handles.topview.conditions.(condition).topview_infra_yi/100,handles.topview.conditions.(condition).topview_infra_mean_interpol);
-                shading flat;
-                axis equal;
-                axis ij;
-                hold on;
-                plot(handles.topview.conditions.(condition).topview_area_infra_mean_interpol/100,handles.topview.conditions.(condition).topview_area_infra_yi/100,'k-');
-                hold off;
-                set(figsubinfra(i), 'Uicontextmenu',cmenuinfra);
-                set(figsubinfra(i),'Tag','jet');
-                title([condition ' - Infra']);
-                lims = ylim;
-                bregmainfra(i,:) = lims;
-                climinfra(i,:) = caxis;
-                
+        for j=1:length(suporinfra)
+            switch view
+                case 'flatmount'
+                    figure(fig(j));
+                    figsub(j,i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
+                    imagesc(handles.topview.conditions.(condition).segmentsinterpol,handles.topview.conditions.(condition).bregmasinterpol,handles.topview.conditions.(condition).([suporinfra{j} '_mean_interpol']));
+                    hold on;
+                    plot(handles.topview.conditions.(condition).(['arearel' suporinfra{j} '_mean_interpol']),handles.topview.conditions.(condition).bregmasinterpol,'k-');
+                    plot(ones(size(handles.topview.conditions.(condition).bregmas,1),1),handles.topview.conditions.(condition).bregmas,'k>');
+                    hold off;
+                case 'topview'
+                    figure(fig(j));
+                    figsub(j,i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
+                    pcolor_rgb(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol']));
+                    hold on;
+                    plot(handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_mean_interpol'])/100,handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_yi'])/100,'k-');
+                    hold off;
+            end
+            set(figsub(j,i), 'Uicontextmenu',cmenu(j));
+            set(figsub(j,i),'Tag','jet');
+            title([condition ' - ' suporinfra{j}]);
+            xlims(j,i,:) = xlim;
+            ylims(j,i,:) = ylim;
+            clims(j,i,:) = caxis;
         end
+        
     end
-%     set(figsubsupra,'Clim',[min(min(climsupra(:)),min(climinfra(:))) max(max(climsupra(:)),max(climinfra(:)))]);
-%     set(figsubinfra,'Clim',[min(min(climsupra(:)),min(climinfra(:))) max(max(climsupra(:)),max(climinfra(:)))]);
-    set(figsubsupra,'Clim',[0 100]);
-    set(figsubinfra,'Clim',[0 100]);
-%     set(figsubsupra,'Ylim',[min(bregmasupra(:,1)) max(bregmasupra(:,2))]);
-%     set(figsubinfra,'Ylim',[min(bregmainfra(:,1)) max(bregmainfra(:,2))]);
-    colormap(figsupra,jet);
-    colormap(figinfra,jet);
-    set(figsupra,'Visible','on');
-    set(figinfra,'Visible','on');
+    ylims = reshape(ylims,[],2);
+    xlims = reshape(xlims,[],2);
+    clims = reshape(clims,[],2);
+    set(figsub,'Clim',[0 100]);
+    set(figsub,'Ylim',[min(ylims(:,1)) max(ylims(:,2))]);
+%     set(figsub,'Xlim',[min(xlims(:,1)) max(xlims(:,2))]);
+    set(figsub,'Xlim',[min(xlims(:,1))*(1 - (sign(min(xlims(:,1)))*0.03)) max(xlims(:,2))*(1 + (sign(min(xlims(:,1)))*0.03))]);
+    set(fig,'Visible','on');
     guidata(hObject,handles);
-    saveProject(handles,'topview');
 
 % --- Executes on button press in push_drawpermouse_topview.
 function push_drawpermouse_topview_Callback(hObject, eventdata, handles)
@@ -566,3 +415,37 @@ function push_drawpercondition_flat_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     drawpercondition(hObject,handles,'flatmount');
+
+
+% --------------------------------------------------------------------
+function Untitled_1_Callback(hObject, eventdata, handles)
+% hObject    handle to Untitled_1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_recal_topviewmice_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_recal_topviewmice (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    handles.topview = interpolate_mice_gm(handles.topview);
+    fprintf('Topview per animal recalculated\n');
+    guidata(hObject,handles);
+
+% --------------------------------------------------------------------
+function menu_recal_topviewconditions_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_recal_topviewconditions (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    handles.topview = interpolate_conditions_gm(handles.topview);
+    fprintf('Topview per condition recalculated\n');
+    guidata(hObject,handles);
+
+
+% --- Executes on button press in push_drawpermouse_gm.
+function push_drawpermouse_gm_Callback(hObject, eventdata, handles)
+% hObject    handle to push_drawpermouse_gm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    drawpermouse(hObject,handles,'topview_gm');

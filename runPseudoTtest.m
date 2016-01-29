@@ -178,7 +178,11 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
     topview.interconditions.(conditioncombname).(['nanmap_' suporinfra]) = squeeze(observed_nanmap);
     %calculate cutoff
     topview.interconditions.(conditioncombname).(['Tmax_deactivation_' suporinfra]) = sort(Tmax_deactivation,'descend');
+    Tmax_deactivation_mean = mean(topview.interconditions.(conditioncombname).(['Tmax_deactivation_' suporinfra]));
+    Tmax_deactivation_std = std(topview.interconditions.(conditioncombname).(['Tmax_deactivation_' suporinfra]));
     topview.interconditions.(conditioncombname).(['Tmax_activation_' suporinfra]) = sort(Tmax_activation);
+    Tmax_activation_mean = mean(topview.interconditions.(conditioncombname).(['Tmax_activation_' suporinfra]));
+    Tmax_activation_std = std(topview.interconditions.(conditioncombname).(['Tmax_activation_' suporinfra]));
     alpha = 0.05;
     topview.interconditions.(conditioncombname).criticalpos_1tailed = floor(alpha*size(perms,1))+1;
     topview.interconditions.(conditioncombname).criticalpos_2tailed = floor(alpha/2*size(perms,1))+1;
@@ -191,8 +195,10 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
     topview.interconditions.(conditioncombname).(['cutoff_activation_2tailed_' suporinfra]) = topview.interconditions.(conditioncombname).(['tstat_' suporinfra]) >= topview.interconditions.(conditioncombname).(['criticalvalue_activation_2tailed_' suporinfra]);
     topview.interconditions.(conditioncombname).(['cutoff_deactivation_2tailed_' suporinfra]) = topview.interconditions.(conditioncombname).(['tstat_' suporinfra]) <= topview.interconditions.(conditioncombname).(['criticalvalue_deactivation_2tailed_' suporinfra]);
     % calculate power
-    topview.interconditions.(conditioncombname).(['power_1tailed_' suporinfra]) = normcdf(abs(topview.interconditions.(conditioncombname).(['tstat_' suporinfra])) - norminv(1-alpha));
-    topview.interconditions.(conditioncombname).(['power_2tailed_' suporinfra]) = normcdf(topview.interconditions.(conditioncombname).(['tstat_' suporinfra]) - norminv(1-alpha/2))+normcdf(-topview.interconditions.(conditioncombname).(['tstat_' suporinfra]) - norminv(1-alpha/2));
+    topview.interconditions.(conditioncombname).(['power_deactivation_1tailed_' suporinfra]) = normcdf(abs((topview.interconditions.(conditioncombname).(['tstat_' suporinfra])-Tmax_deactivation_mean)./Tmax_deactivation_std) - norminv(1-alpha));
+    topview.interconditions.(conditioncombname).(['power_activation_1tailed_' suporinfra]) = normcdf(abs((topview.interconditions.(conditioncombname).(['tstat_' suporinfra])-Tmax_activation_mean)./Tmax_activation_std) - norminv(1-alpha));
+    %TODO fix 2tailed power analysis
+    topview.interconditions.(conditioncombname).(['power_deactivation_2tailed_' suporinfra]) = normcdf(topview.interconditions.(conditioncombname).(['tstat_' suporinfra]) - norminv(1-alpha/2))+normcdf(-topview.interconditions.(conditioncombname).(['tstat_' suporinfra]) - norminv(1-alpha/2));
     topview.interconditions.(conditioncombname).selected = true;
     topview.interconditions.(conditioncombname).equalvariances = equalvariances;
     topview.interconditions.(conditioncombname).topview = true;

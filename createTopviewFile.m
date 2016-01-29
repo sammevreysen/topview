@@ -12,6 +12,7 @@ function topview = createTopviewFile(setuptable)
 %%%%%%%%%%%%%%%%%%%%%%%%
     lr = {'left';'right'};
     suporinfra = {'supra';'infra'};
+    toporbot = {'top';'bot'};
     bregmas = cellfun(@(x) num2str(x.bregma),setuptable(:,5),'UniformOutput',false);
     tmp = [setuptable bregmas];
     [setuptable idx] = sortrows(tmp,[1 2 7]);
@@ -22,6 +23,8 @@ function topview = createTopviewFile(setuptable)
     topview.arealborders = unique(setuptable{1,5}.arealborders);
     topview.areas = setuptable{1,5}.areas;
     topview.pixpermm = 52.3864;
+    topview.lr = lr;
+    topview.suporinfra = suporinfra;
     for i=1:size(topview.conditionnames,1)
         topview.conditions.(topview.conditionnames{i}).mice = unique(setuptable(strcmp(setuptable(:,1),topview.conditionnames{i}),2));
         topview.conditions.(topview.conditionnames{i}).hemisphere = lr{strcmp(topview.conditionnames{i}(end-2:end),'_RH')+1};
@@ -33,67 +36,61 @@ function topview = createTopviewFile(setuptable)
             topview.mice.(mouse).hemisphere = lr{strcmp(mouse(end-2:end),'_RH')+1};
             topview.mice.(mouse).bregmas = cell2mat(cellfun(@(x) x.bregma,setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false));
             topview.mice.(mouse).segments = cell2mat(cellfun(@(x) x.bregma,setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false));
-            topview.mice.(mouse).supra = (1-(cell2mat(cellfun(@(x) x.meansupra_raw, setuptable(strcmp(setuptable(:,2),mouse),6),'UniformOutput',false))./repmat(cell2mat(cellfun(@(x) x.meanbg, setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false)),1,topview.segments))).*100;
-            topview.mice.(mouse).infra = (1-(cell2mat(cellfun(@(x) x.meaninfra_raw, setuptable(strcmp(setuptable(:,2),mouse),6),'UniformOutput',false))./repmat(cell2mat(cellfun(@(x) x.meanbg, setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false)),1,topview.segments))).*100;
-            topview.mice.(mouse).arearelsupra = cell2mat(cellfun(@(x) x.toparealrel,setuptable(strcmp(setuptable(:,2),mouse),6),'UniformOutput',false));
-            topview.mice.(mouse).arearelinfra = cell2mat(cellfun(@(x) x.botarealrel,setuptable(strcmp(setuptable(:,2),mouse),6),'UniformOutput',false));
+            for h=1:length(suporinfra)
+                topview.mice.(mouse).(suporinfra{h}) = (1-(cell2mat(cellfun(@(x) x.(['mean' suporinfra{h} '_raw']), setuptable(strcmp(setuptable(:,2),mouse),6),'UniformOutput',false))./repmat(cell2mat(cellfun(@(x) x.meanbg, setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false)),1,topview.segments))).*100;
+                topview.mice.(mouse).(['arearel' suporinfra{h}]) = cell2mat(cellfun(@(x) x.([toporbot{h} 'arealrel']),setuptable(strcmp(setuptable(:,2),mouse),6),'UniformOutput',false));
+            end
         catch
             fprintf('problem %d - %s',i,topview.micenames{i});
         end
     end
     topview.normalizetomouse = NaN;
     for i=1:size(topview.micenames,1)
-        topview.mice.(topview.micenames{i}).normalizefactor_supra = 1;
-        topview.mice.(topview.micenames{i}).normalizefactor_infra = 1;
+        for h=1:length(suporinfra)
+            topview.mice.(topview.micenames{i}).(['normalizefactor_' suporinfra{h}]) = 1;
+        end
     end
 
-%     if(~isfield(topview.mice.(topview.micenames{1}),'topcoxyprojected'))
-    tmp = zeros(size(setuptable,1),1);
-    for i=1:size(setuptable,1)
-        setuptable{i,6}.topcoxyprojected = projectToTopview(getCenterCoXY(setuptable{i,6}.topcoxy),setuptable{i,5}.midlinep);
-        setuptable{i,6}.botcoxyprojected = projectToTopview(getCenterCoXY(setuptable{i,6}.botcoxy),setuptable{i,5}.midlinep);
-        setuptable{i,5}.topareaxyprojected = projectToTopview(setuptable{i,5}.topareaxy,setuptable{i,5}.midlinep);
-        setuptable{i,5}.botareaxyprojected = projectToTopview(setuptable{i,5}.botareaxy,setuptable{i,5}.midlinep);
-        tmp(i) = length(setuptable{i,5}.topareaxyprojected);
+     for i=1:size(setuptable,1)
+        for h=1:length(suporinfra)
+            setuptable{i,6}.([toporbot{h} 'coxyprojected']) = projectToTopview(getCenterCoXY(setuptable{i,6}.([toporbot{h} 'coxy'])),setuptable{i,5}.midlinep);
+            setuptable{i,5}.([toporbot{h} 'areaxyprojected']) = projectToTopview(setuptable{i,5}.([toporbot{h} 'areaxy']),setuptable{i,5}.midlinep);
+        end
     end
     oldmouse = '';
     for i=1:size(setuptable,1)
         mouse = setuptable{i,2};
-        if(~strcmp(oldmouse,mouse))
-            topview.mice.(mouse).topareaxyprojected = nan(length(topview.mice.(mouse).bregmas),topview.arealborders);
-            topview.mice.(mouse).botareaxyprojected = nan(length(topview.mice.(mouse).bregmas),topview.arealborders);
-            oldmouse = mouse;
+        for h=1:length(suporinfra)
+            if(~strcmp(oldmouse,mouse))
+                topview.mice.(mouse).([toporbot{h} 'areaxyprojected']) = nan(length(topview.mice.(mouse).bregmas),topview.arealborders);
+                oldmouse = mouse;
+            end
+            tmpcoxy = getCenterCoXY(setuptable{i,6}.([toporbot{h} 'coxy']));
+            topview.mice.(mouse).([suporinfra{h} 'coxy'])(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:,:) = reshape(tmpcoxy,[1 size(tmpcoxy)]);
+            tmpcoxy = getCenterCoXY(setuptable{i,5}.([toporbot{h} 'areaxy']));
+            topview.mice.(mouse).([suporinfra{h} 'areacoxy'])(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:,:) = reshape(tmpcoxy,[1 size(tmpcoxy)]);
+            
+            topview.mice.(mouse).([suporinfra{h} 'coxyprojected'])(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:) = setuptable{i,6}.([toporbot{h} 'coxyprojected']);
+            topview.mice.(mouse).([suporinfra{h} 'areaxyprojected'])(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:) = setuptable{i,5}.([toporbot{h} 'areaxyprojected']);
         end
-        tmpcoxy = getCenterCoXY(setuptable{i,6}.topcoxy);
-        topview.mice.(mouse).topcoxy(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:,:) = reshape(tmpcoxy,[1 size(tmpcoxy)]);
-        tmpcoxy = getCenterCoXY(setuptable{i,6}.botcoxy);
-        topview.mice.(mouse).botcoxy(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:,:) = reshape(tmpcoxy,[1 size(tmpcoxy)]);
-        tmpcoxy = getCenterCoXY(setuptable{i,5}.topareaxy);
-        topview.mice.(mouse).topareacoxy(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:,:) = reshape(tmpcoxy,[1 size(tmpcoxy)]);
-        tmpcoxy = getCenterCoXY(setuptable{i,5}.botareaxy);
-        topview.mice.(mouse).botareacoxy(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:,:) = reshape(tmpcoxy,[1 size(tmpcoxy)]);
         topview.mice.(mouse).midlinep(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:) = setuptable{i,5}.midlinep;
-        topview.mice.(mouse).topcoxyprojected(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:) = setuptable{i,6}.topcoxyprojected;
-        topview.mice.(mouse).botcoxyprojected(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:) = setuptable{i,6}.botcoxyprojected;
-        topview.mice.(mouse).topareaxyprojected(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:) = setuptable{i,5}.topareaxyprojected;
-        topview.mice.(mouse).botareaxyprojected(topview.mice.(mouse).bregmas == setuptable{i,5}.bregma,:) = setuptable{i,5}.botareaxyprojected;
     end
     %clim
-    clim_sup_low = min(cell2mat(cellfun(@(x) min(topview.mice.(x).supra(:)),topview.micenames,'UniformOutput',false)));
-    clim_inf_low = min(cell2mat(cellfun(@(x) min(topview.mice.(x).infra(:)),topview.micenames,'UniformOutput',false)));
-    clim_sup_high = max(cell2mat(cellfun(@(x) max(topview.mice.(x).supra(:)),topview.micenames,'UniformOutput',false)));
-    clim_inf_high = max(cell2mat(cellfun(@(x) max(topview.mice.(x).infra(:)),topview.micenames,'UniformOutput',false)));
-    topview.clim = [min(clim_sup_low,clim_inf_low) max(clim_sup_high,clim_inf_high)];
+    for h=1:length(suporinfra)
+        clim_low(h) = min(cell2mat(cellfun(@(x) min(topview.mice.(x).(suporinfra{h})(:)),topview.micenames,'UniformOutput',false)));
+        clim_high(h) = max(cell2mat(cellfun(@(x) max(topview.mice.(x).(suporinfra{h})(:)),topview.micenames,'UniformOutput',false)));
+    end
+    topview.clim = [min(clim_low) max(clim_high)];
     
     %smooth projection
     mice = fieldnames(topview.mice);
     for i=1:size(mice,1)
         mouse = mice{i};
-        topview.mice.(mouse).topcoxyprojected_smooth = smoothProjection(topview.mice.(mouse).topcoxyprojected,topview.mice.(mouse).topcoxy,topview.mice.(mouse).midlinep);
-        topview.mice.(mouse).botcoxyprojected_smooth = smoothProjection(topview.mice.(mouse).botcoxyprojected,topview.mice.(mouse).botcoxy,topview.mice.(mouse).midlinep);
-        for j=1:size(topview.mice.(mouse).topareaxyprojected,2)
-            topview.mice.(mouse).topareaxyprojected_smooth(:,j) = smoothLine(topview.mice.(mouse).topareaxyprojected(:,j),5);
-            topview.mice.(mouse).botareaxyprojected_smooth(:,j) = smoothLine(topview.mice.(mouse).botareaxyprojected(:,j),5);
+        for h=1:length(suporinfra)
+            topview.mice.(mouse).([suporinfra{h} 'coxyprojected_smooth']) = smoothProjection(topview.mice.(mouse).([suporinfra{h} 'coxyprojected']),topview.mice.(mouse).([suporinfra{h} 'coxy']),topview.mice.(mouse).midlinep);
+            for j=1:size(topview.mice.(mouse).([suporinfra{h} 'areaxyprojected']),2)
+                topview.mice.(mouse).([suporinfra{h} 'areaxyprojected_smooth'])(:,j) = smoothLine(topview.mice.(mouse).([suporinfra{h} 'areaxyprojected'])(:,j),5);
+            end
         end
     end
     %general mouse model
@@ -105,10 +102,10 @@ function topview = createTopviewFile(setuptable)
         for j=1:size(mice,1)
             mouse = mice{j};
             if(strcmp(topview.mice.(mouse).hemisphere,lr{i}))
-                tmpgeneralmodel.(lr{i}).mask_supra(ismember(topview.bregmas,topview.mice.(mouse).bregmas),:,j) = topview.mice.(mouse).topcoxyprojected_smooth;
-                tmpgeneralmodel.(lr{i}).mask_infra(ismember(topview.bregmas,topview.mice.(mouse).bregmas),:,j) = topview.mice.(mouse).botcoxyprojected_smooth;
-                tmpgeneralmodel.(lr{i}).areas_supra(ismember(topview.bregmas,topview.mice.(mouse).bregmas),:,j) = topview.mice.(mouse).topareaxyprojected_smooth;
-                tmpgeneralmodel.(lr{i}).areas_infra(ismember(topview.bregmas,topview.mice.(mouse).bregmas),:,j) = topview.mice.(mouse).botareaxyprojected_smooth;
+                for h=1:length(suporinfra)
+                    tmpgeneralmodel.(lr{i}).(['mask_' suporinfra{h}])(ismember(topview.bregmas,topview.mice.(mouse).bregmas),:,j) = topview.mice.(mouse).([suporinfra{h} 'coxyprojected_smooth']);
+                    tmpgeneralmodel.(lr{i}).(['areas_' suporinfra{h}])(ismember(topview.bregmas,topview.mice.(mouse).bregmas),:,j) = topview.mice.(mouse).([suporinfra{h} 'areaxyprojected_smooth']);
+                end
                 if(isfield(topview,'mousemask') & isfield(topview.generalmodel,lr{i}) & isfield(topview.generalmodel.(lr{i}),'mice'))
                     topview.generalmodel.(lr{i}).mice = [topview.generalmodel.(lr{i}).mice {mouse}];
                 else
@@ -158,16 +155,8 @@ function topview = createTopviewFile(setuptable)
             topview.generalmodel.(lr{i}).(['areas_' suporinfra{h}]) = inpaint_nans(topview.generalmodel.(lr{i}).(['areas_' suporinfra{h}]),3);
         end
     end
-    %make topviews for each mouse based on general mouse model
-    for h=1:length(suporinfra)
-        for i=1:size(mice,1)
-            mouse = mice{i};
-            xs = topview.generalmodel.(topview.mice.(mouse).hemisphere).(['mask_' suporinfra{h}]);
-            ys = topview.generalmodel.(topview.mice.(mouse).hemisphere).bregmas;
-            v = topview.mice.(mouse).(suporinfra{h}).*topview.mice.(mouse).(['normalizefactor_' suporinfra{h}]);
-            [xi yi] = meshgrid(min(xs(:)):max(xs(:)),min(ys(:)):max(ys(:)));
-            vnnan = ismember(topview.generalmodel.(topview.mice.(mouse).hemisphere).bregmas(:,1),topview.mice.(mouse).bregmas);
-            topview.mice.(mouse).([suporinfra{h} 'interpol_gm']) = griddata(xs(vnnan,:),ys(vnnan,:),v,xi,yi,'linear');
-        end
-    end
-%     end
+    %create topviews for each mouse based on general mouse model
+    topview.mice = catstruct(topview.mice,interpolate_mice_gm(topview));
+    %create topview per condition based on general mouse model
+    topview.conditions = catstruct(topview.conditions,interpolate_conditions_gm(topview));
+    
