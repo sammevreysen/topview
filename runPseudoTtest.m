@@ -30,6 +30,8 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
     %permutations and its complement
     miceconditionA = topview.conditions.(condnameA).mice;
     miceconditionB = topview.conditions.(condnameB).mice;
+    nA = size(miceconditionA,1);
+    nB = size(miceconditionB,1);
     mice = [miceconditionA; miceconditionB];
     perms = nchoosek(mice, size(miceconditionA,1));
     for jjj = 1:size(perms,1)
@@ -159,6 +161,8 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
             observed_topviewABdiff_relative(jjj,:,:) = topviewABdiff./sum(topviewAB3D,3);
             observed_tstat(jjj,:,:) = tstat;
             observed_nanmap(jjj,:,:) = any(isnan(cat(3,condA_interpol,condB_interpol)),3);
+            observed_condAvar(jjj,:,:) = condAvar;
+            observed_condBvar(jjj,:,:) = condBvar;
         end
         %report progress
         parfor_progress;
@@ -167,9 +171,11 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
     topview.conditions.(condnameA).([suporinfra '_mean_interpol']) = squeeze(observed_condA_mean_interpol);
     topview.conditions.(condnameA).([suporinfra '_segments_interpol']) = squeeze(observed_segments_interpol);
     topview.conditions.(condnameA).([suporinfra '_bregmas_interpol']) = squeeze(observed_bregmas_interpol);
+%     topview.conditions.(condnameA).([suporinfra '_variance']) = squeeze(observed_condAvar);
     topview.conditions.(condnameB).([suporinfra '_mean_interpol']) = squeeze(observed_condB_mean_interpol);
     topview.conditions.(condnameB).([suporinfra '_segments_interpol']) = squeeze(observed_segments_interpol);
     topview.conditions.(condnameB).([suporinfra '_bregmas_interpol']) = squeeze(observed_bregmas_interpol);
+%     topview.conditions.(condnameB).([suporinfra '_variance']) = squeeze(observed_condBvar);
     topview.interconditions.(conditioncombname).(['topviewABdiff_' suporinfra]) = squeeze(observed_topviewABdiff);
     topview.interconditions.(conditioncombname).(['topviewABdiff_relative_' suporinfra]) = squeeze(observed_topviewABdiff_relative);
     topview.interconditions.(conditioncombname).([suporinfra '_bregmas_interpol']) = squeeze(observed_bregmas_interpol);
@@ -195,13 +201,23 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
     topview.interconditions.(conditioncombname).(['cutoff_activation_2tailed_' suporinfra]) = topview.interconditions.(conditioncombname).(['tstat_' suporinfra]) >= topview.interconditions.(conditioncombname).(['criticalvalue_activation_2tailed_' suporinfra]);
     topview.interconditions.(conditioncombname).(['cutoff_deactivation_2tailed_' suporinfra]) = topview.interconditions.(conditioncombname).(['tstat_' suporinfra]) <= topview.interconditions.(conditioncombname).(['criticalvalue_deactivation_2tailed_' suporinfra]);
     % calculate power
-    topview.interconditions.(conditioncombname).(['power_deactivation_1tailed_' suporinfra]) = normcdf(abs((topview.interconditions.(conditioncombname).(['tstat_' suporinfra])-Tmax_deactivation_mean)./Tmax_deactivation_std) - norminv(1-alpha));
-    topview.interconditions.(conditioncombname).(['power_activation_1tailed_' suporinfra]) = normcdf(abs((topview.interconditions.(conditioncombname).(['tstat_' suporinfra])-Tmax_activation_mean)./Tmax_activation_std) - norminv(1-alpha));
-    %TODO fix 2tailed power analysis
-    topview.interconditions.(conditioncombname).(['power_deactivation_2tailed_' suporinfra]) = normcdf(topview.interconditions.(conditioncombname).(['tstat_' suporinfra]) - norminv(1-alpha/2))+normcdf(-topview.interconditions.(conditioncombname).(['tstat_' suporinfra]) - norminv(1-alpha/2));
-    topview.interconditions.(conditioncombname).selected = true;
-    topview.interconditions.(conditioncombname).equalvariances = equalvariances;
-    topview.interconditions.(conditioncombname).topview = true;
+%     vA = topview.conditions.(condnameA).([suporinfra '_variance']);
+%     vB = topview.conditions.(condnameB).([suporinfra '_variance']);
+%     df = ((vA./nA)+(vB./nB))./(((vA./nA).^2)./(nA-1)+((vB./nB).^2)./(nB-1));
+    
+    %one mean power
+%     criticalvalue = topview.interconditions.(conditioncombname).(['criticalvalue_deactivation_1tailed_' suporinfra]);
+%     lambda = (criticalvalue - Tmax_deactivation_mean)/(Tmax_deactivation_std/sqrt(N));
+%     xa = Tmax_deactivation_mean + tinv(1-0.05,N-1) * Tmax_deactivation_std/sqrt(N);
+%     ta = (xa - criticalvalue)/(Tmax_deactivation_std/sqrt(N))+lambda;
+% %     topview.interconditions.(conditioncombname).(['power_deactivation_1tailed_' suporinfra]) = normcdf(-((topview.interconditions.(conditioncombname).(['tstat_' suporinfra])-Tmax_deactivation_mean)./Tmax_deactivation_std + norminv(1-alpha))).*100;
+% %     topview.interconditions.(conditioncombname).(['power_activation_1tailed_' suporinfra]) = normcdf((topview.interconditions.(conditioncombname).(['tstat_' suporinfra])-Tmax_activation_mean)./Tmax_activation_std - norminv(1-alpha)).*100;
+% %     topview.interconditions.(conditioncombname).(['power_deactivation_2tailed_' suporinfra]) = (topview.interconditions.(conditioncombname).(['topviewABdiff_relative_' suporinfra]) < 0).*normcdf(-((topview.interconditions.(conditioncombname).(['tstat_' suporinfra])-Tmax_deactivation_mean)./Tmax_deactivation_std + norminv(1-alpha/2))).*100;
+% %     topview.interconditions.(conditioncombname).(['power_activation_2tailed_' suporinfra]) = (topview.interconditions.(conditioncombname).(['topviewABdiff_relative_' suporinfra]) > 0).*normcdf((topview.interconditions.(conditioncombname).(['tstat_' suporinfra])-Tmax_activation_mean)./Tmax_activation_std - norminv(1-alpha/2)).*100;
+%     topview.interconditions.(conditioncombname).(['power_deactivation_1tailed_' suporinfra]) = nctcdf(ta,N-1,lambda);
+%     topview.interconditions.(conditioncombname).selected = true;
+%     topview.interconditions.(conditioncombname).equalvariances = equalvariances;
+%     topview.interconditions.(conditioncombname).topview = true;
    
     %clean progress report
     parfor_progress(0);

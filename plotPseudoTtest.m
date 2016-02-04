@@ -24,7 +24,8 @@ function plotPseudoTtest(topview,tail)
         uimenu(cmenu, 'Label', 'Enlarge', 'Callback', @enlargesubplot);
         hMenu = uimenu(fig,'Label','Save');
         uimenu(hMenu,'Label','Save as PDF...','Callback',@saveFigAsPDF);
-        hsp = zeros(rows,5);
+        columns = 4;
+        hsp = zeros(rows,columns);
         for i=1:rows
             condnames = topview.interconditions.(interconditions{i}).conditions;
             x = topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['xi_' suporinfra{j}])./100; %(1,:)
@@ -57,7 +58,8 @@ function plotPseudoTtest(topview,tail)
 %             imagesc(topview.interconditions.(interconditions{i}).([suporinfra{j} '_segments_interpol'])(1,:)/100,topview.interconditions.(interconditions{i}).([suporinfra{j} '_bregmas_interpol'])(:,1)/100,im);
             hold on;
             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
-            plot_contours(topview,interconditions{i},suporinfra{j},tail);
+            plot_contours(topview,interconditions{i},suporinfra{j},tail,'stats');
+%             plot_contours(topview,interconditions{i},suporinfra{j},tail,'power');
             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title('A-B')
@@ -68,7 +70,7 @@ function plotPseudoTtest(topview,tail)
             pcolor_rgb(topview.interconditions.(interconditions{i}).([suporinfra{j} '_segments_interpol'])./100,topview.interconditions.(interconditions{i}).([suporinfra{j} '_bregmas_interpol'])./100,im);
             set(gca,'Clim',[min(topview.interconditions.(interconditions{i}).(['tstat_' suporinfra{j}])(:)) max(topview.interconditions.(interconditions{i}).(['tstat_' suporinfra{j}])(:))]);
             hold on;
-            plot_contours(topview,interconditions{i},suporinfra{j},tail);
+            plot_contours(topview,interconditions{i},suporinfra{j},tail,'stats');
             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title('Pseudo T-test');
@@ -111,24 +113,31 @@ function plotPseudoTtest(topview,tail)
 %                 set(hsp(i,5),'Xlim',[xlim(1) 0]);
 %             end
             title('Tmax distribution');
-            hsp(i,6) = subplot_tight(rows,6,(i-1)*6+6,marg1);
-            if(strcmp(tail,'2-tailed'))
-                tailstr = '1tailed_';
-            else
-                tailstr = '2tailed_';
-            end
-            im = topview.interconditions.(interconditions{i}).(['power_' tailstr suporinfra{j}]);
-            pcolor_rgb(topview.interconditions.(interconditions{i}).([suporinfra{j} '_segments_interpol'])./100,topview.interconditions.(interconditions{i}).([suporinfra{j} '_bregmas_interpol'])./100,im);
-            set(gca,'Clim',[nanmin(topview.interconditions.(interconditions{i}).(['power_' tailstr suporinfra{j}])(:)) nanmax(topview.interconditions.(interconditions{i}).(['power_' tailstr suporinfra{j}])(:))]);
-            title('Power pT-test');
-            colorbar('location','EastOutside')
+            
+%             hsp(i,6) = subplot_tight(rows,6,(i-1)*6+6,marg1);
+%             switch tail
+%                 case '1-tailed Activation'
+%                     im = topview.interconditions.(interconditions{i}).(['power_activation_1tailed_' suporinfra{j}]);
+%                 case '1-tailed Deactivation'
+%                     im = topview.interconditions.(interconditions{i}).(['power_deactivation_1tailed_' suporinfra{j}]);
+%                 case '2-tailed'
+%                     im = topview.interconditions.(interconditions{i}).(['power_deactivation_1tailed_' suporinfra{j}]);
+%             end
+%             pcolor_rgb(topview.interconditions.(interconditions{i}).([suporinfra{j} '_segments_interpol'])./100,topview.interconditions.(interconditions{i}).([suporinfra{j} '_bregmas_interpol'])./100,im);
+%             hold on;
+%             plot_contours(topview,interconditions{i},suporinfra{j},tail,'power');
+%             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
+%             hold off;
+% %             set(gca,'Clim',[nanmin(topview.interconditions.(interconditions{i}).(['power_' tailstr suporinfra{j}])(:)) nanmax(topview.interconditions.(interconditions{i}).(['power_' tailstr suporinfra{j}])(:))]);
+%             title('Power pT-test');
+%             colorbar('location','EastOutside')
         end
-        ylim = cell2mat(get(hsp(:,[1:4 6]),'Ylim'));
-        set(hsp(:,[1:4 6]),'Ylim',[min(ylim(:,1)) max(ylim(:,2))]);
+        ylim = cell2mat(get(hsp(:,1:4),'Ylim'));
+        set(hsp(:,1:4),'Ylim',[min(ylim(:,1)) max(ylim(:,2))]);
         clim = cell2mat(get(hsp(:,1:2),'Clim'));
         set(hsp(:,1:2),'Clim',[min(clim(:,1)) max(clim(:,2))]);
         set(hsp(:,3),'Clim',[-1 1]);
-        set(hsp(:,[1:4 6]),'DataAspectRatio',[1 1 1]);
+        set(hsp(:,1:4),'DataAspectRatio',[1 1 1]);
         if(size(hsp,1) > 1)
             pos = cell2mat(get(hsp(:,5),'Position'));
         else
@@ -144,26 +153,42 @@ function plotPseudoTtest(topview,tail)
 %         set(hsp,'YDir','normal');
     end
     
-    function plot_contours(topview,intercondition,suporinfra,tail)
+    function plot_contours(topview,intercondition,suporinfra,tail,mode)
         switch tail
             case '1-tailed Activation'
-                if(sum(topview.interconditions.(intercondition).(['cutoff_activation_1tailed_' suporinfra])(:)) > 0)
-                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['cutoff_activation_1tailed_' suporinfra]),'k-');
-                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['power_activation_1tailed_' suporinfra]),[80 80],'k:');
+                if(strcmp(mode,'stats'))
+                    if(sum(topview.interconditions.(intercondition).(['cutoff_activation_1tailed_' suporinfra])(:)) > 0)
+                        contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['cutoff_activation_1tailed_' suporinfra]),'k-');
+                    end
+                else
+                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['power_activation_1tailed_' suporinfra]),[80 80],'k-.');
+                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['power_activation_1tailed_' suporinfra]),[90 90],'k:');
                 end
             case '1-tailed Deactivation'
-                if(sum(topview.interconditions.(intercondition).(['cutoff_deactivation_1tailed_' suporinfra])(:)) > 0)
-                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['cutoff_deactivation_1tailed_' suporinfra]),'w-');
-                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['power_deactivation_1tailed_' suporinfra]),[80 80],'w:');
+                if(strcmp(mode,'stats'))
+                    if(sum(topview.interconditions.(intercondition).(['cutoff_deactivation_1tailed_' suporinfra])(:)) > 0)
+                        contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['cutoff_deactivation_1tailed_' suporinfra]),[1 1],'w-');
+                    end
+                else
+                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['power_deactivation_1tailed_' suporinfra]),[80 80],'w-.');
+                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['power_deactivation_1tailed_' suporinfra]),[90 90],'w:');
                 end
             case '2-tailed'
-                if(sum(topview.interconditions.(intercondition).(['cutoff_activation_2tailed_' suporinfra])(:)) > 0)
-                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['cutoff_activation_2tailed_' suporinfra]),'k-');
-                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['power_activation_2tailed_' suporinfra]),[80 80],'k:');
+                if(strcmp(mode,'stats'))
+                    if(sum(topview.interconditions.(intercondition).(['cutoff_activation_2tailed_' suporinfra])(:)) > 0)
+                        contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['cutoff_activation_2tailed_' suporinfra]),'k-');
+                    end
+                else
+                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['power_activation_2tailed_' suporinfra]),[80 80],'k-.');
+                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['power_activation_2tailed_' suporinfra]),[90 90],'k:');
                 end
-                if(sum(topview.interconditions.(intercondition).(['cutoff_deactivation_2tailed_' suporinfra])(:)) > 0)
-                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['cutoff_deactivation_2tailed_' suporinfra]),'w-');
-                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['power_deactivation_2tailed_' suporinfra]),[80 80],'w:');
+                if(strcmp(mode,'stats'))
+                    if(sum(topview.interconditions.(intercondition).(['cutoff_deactivation_2tailed_' suporinfra])(:)) > 0)
+                        contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['cutoff_deactivation_2tailed_' suporinfra]),'w-');
+                    end
+                else
+                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['power_deactivation_2tailed_' suporinfra]),[80 80],'w-.');
+                    contour(topview.interconditions.(intercondition).([suporinfra '_segments_interpol'])/100,topview.interconditions.(intercondition).([suporinfra '_bregmas_interpol'])/100,topview.interconditions.(intercondition).(['power_deactivation_2tailed_' suporinfra]),[90 90],'w:');
                 end
         end
     

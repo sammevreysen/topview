@@ -109,6 +109,10 @@ function selecttable(hObject,callbackdata)
                 else
                     equalvariances = false;
                 end
+                conditioncombname = [data{callbackdata.Indices(1),2} '_' data{callbackdata.Indices(1),3}];
+                if(isfield(handles.topview,'interconditions') && isfield(handles.topview.interconditions,conditioncombname))
+                    handles.topview.interconditions = rmfield(handles.topview.interconditions,conditioncombname);
+                end
                 fprintf('Running pseudo T-test statistics \nfor supra ');
                 handles.topview = runPseudoTtest(handles.topview,data{callbackdata.Indices(1),2},data{callbackdata.Indices(1),3},'supra',equalvariances);
                 fprintf('\nfor infra ');
@@ -172,7 +176,11 @@ function menu_calcpTtseqvar_Callback(hObject, eventdata, handles)
     equalvariances = true;
     data = get(handles.uitable,'Data');
     fprintf('Running all pseudo T-test statistics assuming no equal variance \n');
+    if(isfield(handles.topview,'interconditions'))
+        handles.topview = rmfield(handles.topview,'interconditions');
+    end
     for i=1:size(data,1)
+        fprintf('%d/%d\n',i,size(data,1));
         handles.topview = runPseudoTtest(handles.topview,data{i,2},data{i,3},'supra',equalvariances);
         fprintf('\n');
         handles.topview = runPseudoTtest(handles.topview,data{i,2},data{i,3},'infra',equalvariances);
@@ -192,7 +200,9 @@ function menu_calcpTtsneqvar_Callback(hObject, eventdata, handles)
     equalvariances = false;
     data = get(handles.uitable,'Data');
     fprintf('Running all pseudo T-test statistics assuming no equal variance \n');
-%     handles.topview = rmfield(handles.topview,'interconditions');
+    if(isfield(handles.topview,'interconditions'))
+        handles.topview = rmfield(handles.topview,'interconditions');
+    end
     for i=1:size(data,1)
         if(~strcmp(data{i,2},'') && ~strcmp(data{i,3},''))
             handles.topview = runPseudoTtest(handles.topview,data{i,2},data{i,3},'supra',equalvariances);
