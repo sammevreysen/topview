@@ -255,38 +255,35 @@ function exportToExcel(projectresults,filename)
     end
     
     % Connect to Excel
-    %Excel = actxserver('excel.application');
-    NET.addAssembly('microsoft.office.interop.excel');
-    app = Microsoft.Office.Interop.Excel.ApplicationClass;
+    app = actxserver('Excel.Application');
     books = app.Workbooks;
     newWB = Add(books);
-    app.Visible = false;
+    app.Visible = true;
     sheets = newWB.Worksheets;
     
-    newSheet = Item(sheets,1);
-    newWS = Microsoft.Office.Interop.Excel.Worksheet(newSheet);
+    newWS = Add(sheets);
+%     newWS(1) = Microsoft.Office.Interop.Excel.Worksheet(newSheet);
     newWS.Name = 'Information';
     dim = size(info);
-    range = Range(newWS,[ExcelCol(1) '1:' ExcelCol(dim(2)) num2str(dim(1))]);
+    range = Range(newWS(1),[ExcelCol(1) '1:' ExcelCol(dim(2)) num2str(dim(1))]);
     range.Value2 = info;
     
-    newSheet = Item(sheets,2);
-    newWS = Microsoft.Office.Interop.Excel.Worksheet(newSheet);
+    newWS = sheets.Add();
+%     newWS(2) = Microsoft.Office.Interop.Excel.Worksheet(newSheet);
     newWS.Name = 'Mice';
     dim = size(micetab);
     range = Range(newWS,[ExcelCol(1) '1:' ExcelCol(dim(2)) num2str(dim(1))]);
     range.Value2 = micetab;
     
-    newSheet = Item(sheets,3);
-    newWS = Microsoft.Office.Interop.Excel.Worksheet(newSheet);
+    newWS = sheets.Add();
+%     newWS(3) = Microsoft.Office.Interop.Excel.Worksheet(newSheet);
     newWS.Name = 'Conditions';
     dim = size(condtab);
     range = Range(newWS,[ExcelCol(1) '1:' ExcelCol(dim(2)) num2str(dim(1))]);
     range.Value2 = condtab;
     
     
-    %select first sheet
-    newSheet = Item(sheets,1);
+    
     % Save Workbook
     if exist(filename, 'file')
         Save(newWB);
