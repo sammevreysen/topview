@@ -78,6 +78,10 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
     if(~isfield(handles,'topview') || recreatetopview)
         handles.topview = createTopviewFile(handles.setuptable);
         saveProject(handles,'topview');
+    else
+       if(~isfield(handles.topview,'suporinfra'))
+           handles.topview.suporinfra = {'supra' 'infra'};
+       end
     end
         
     normalisation = arrayfun(@(x) isfield(handles.topview.mice.(x{:}),'normfactor_supra'),handles.mice,'UniformOutput',false);
