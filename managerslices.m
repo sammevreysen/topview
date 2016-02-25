@@ -61,11 +61,11 @@ else
     handles.setuptable = varargin{1};
     handles.projectname = varargin{2};
 end
-
-bregma = arrayfun(@(y) str2mat(y{:}(2:end)),arrayfun(@(x) regexp(x{:}(end-8:end),'[_-]\d{3}','match','once'),handles.setuptable(:,3),'UniformOutput',false),'UniformOutput',false);
-for i=1:size(handles.setuptable,1)
-    handles.setuptable{i,5}.bregma = str2num(bregma{i});
+if(~isfield(handles.setuptable{1,5},'bregma'))
+    handles.setuptable = alignbregmas(handles.setuptable);
+    fprintf('Bregmas aligned\n');
 end
+bregma = cellfun(@(x) x.bregma,handles.setuptable(:,5),'UniformOutput',false);
 midline = cell(size(handles.setuptable,1),1);
 for i=1:size(midline,1)
     if(isfield(handles.setuptable{i,5},'midlinep'))
