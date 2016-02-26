@@ -11,8 +11,8 @@ function topview = createTopviewFile(setuptable)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%
     lr = {'left';'right'};
-    suporinfra = {'supra';'infra'};
-    toporbot = {'top';'bot'};
+    suporinfra = {'supra';'infra';'total'};
+    toporbot = {'top';'bot';'top'}; %assume total
     bregmas = cellfun(@(x) num2str(x.bregma),setuptable(:,5),'UniformOutput',false);
     tmp = [setuptable bregmas];
     [setuptable idx] = sortrows(tmp,[1 2 7]);

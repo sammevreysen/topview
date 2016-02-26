@@ -724,12 +724,23 @@ function handles = calc_OD(handles)
             else
                 handles.setuptable{i,6}.meaninfra_raw(j) = NaN;
             end
-        end        
+        end       
+        %calc OD total
+        for j=1:size(botcox,1)-1
+            if(~isnan(botcox(j)) && ~isnan(topcox(j)) && ~isnan(botcox(j+1)) && ~isnan(topcox(j+1)))
+                
+                segmentmask = roipoly(img,[topcox(j) topcox(j+1) botcox(j+1) botcox(j)],[topcoy(j) topcoy(j+1) botcoy(j+1) botcoy(j)]);
+                handles.setuptable{i,6}.meantotal_raw(j) = mean(mean(img(segmentmask)));
+            else
+                handles.setuptable{i,6}.meantotal_raw(j) = NaN;
+            end
+        end  
         
         %normalize against background in thalamus (%%TODO change here for
         %use with c-13 ladder
         handles.setuptable{i,6}.meansupra = (1-(handles.setuptable{i,6}.meansupra_raw./handles.setuptable{i,5}.meanbg))*100;
         handles.setuptable{i,6}.meaninfra = (1-(handles.setuptable{i,6}.meaninfra_raw./handles.setuptable{i,5}.meanbg))*100;
+        handles.setuptable{i,6}.meantotal = (1-(handles.setuptable{i,6}.meantotal_raw./handles.setuptable{i,5}.meanbg))*100;
     end
     
 function handles = extractdata(handles)

@@ -80,7 +80,7 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
         saveProject(handles,'topview');
     else
        if(~isfield(handles.topview,'suporinfra'))
-           handles.topview.suporinfra = {'supra' 'infra'};
+           handles.topview.suporinfra = {'supra';'infra';'total'};
        end
     end
         
