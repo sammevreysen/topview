@@ -264,7 +264,7 @@ function pushmice_Callback(hObject, eventdata, handles)
             end
         end
         if(all(checklist))
-            managermice({handles.projectname});
+            managermice({handles.projectname},true);
         end
     end
     guidata(hObject,handles);
