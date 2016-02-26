@@ -76,10 +76,10 @@ function paintall()
     stds = cellfun(@std,hp);
     %    figure(hprev2)
     %    plot(stds);
-    offset = find(min(stds)==stds,1,'first')-1;
+    offset = find(min(stds)==stds,1,'first')-2;
     fixedbregmas = (min(rawbregmas)+offset-10:10:max(rawbregmas)+10)';
     fixededges = (min(rawbregmas)+offset-15:10:max(rawbregmas)+15)';
-    plot(xlim,repmat(fixedbregmas',2,1),'k:');
+    plot(xlim,repmat(fixedbregmas',2,1),'k:','LineWidth',0.25);
     set(gcf,'UserData',fixedbregmas);
     
     for i=1:size(info,1)
@@ -102,12 +102,17 @@ function paintall()
         set(info{i,6},'UserData',i);
         
     end
+    xlabel('Animals');
+    ylabel('Bregma (x10^{-2} mm)');
+    title('Alignment of the slices across all animals');
     set(gcf,'UserData',info);
     hm = uimenu(gcf,'Label','Save');
     hm2 = uimenu(hm,'Label','Save corrected Bregma levels','Callback',@gotoend);
     hm3 = uimenu(hm,'Label','Cancel','Callback',@gotocancel);
     hm4 = uimenu(gcf,'Label','Reset');
     hm5 = uimenu(hm4,'Label','Reset using filenames','Callback',@reset);
+    hm6 = uimenu(gcf,'Label','Print');
+    hm7 = uimenu(hm6,'Label','Save as PDF...','Callback',@saveFigAsPDF);
 end
     
 function gotoend(object,event)
