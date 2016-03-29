@@ -19,4 +19,4 @@ function v = movingFWHM(x,m)
     [dx,dy] = meshgrid(-floor(m/2):floor(m/2));
     weight = K(1,dx,dy)/sum(sum(K(1,dx,dy)));
 %     v(~isnan(x(:,1)),:) = conv2(a,weight,'same');
-    v = conv2(x,weight,'same');
+    v = nanconv(x,weight,'noedge','nanout');

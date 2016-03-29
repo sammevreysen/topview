@@ -1,6 +1,16 @@
 function plotPseudoTtest(topview,tail)
     interconditions = fieldnames(topview.interconditions);
-    selected = cell2mat(struct2cell(structfun(@(x) x.selected,topview.interconditions,'UniformOutput',false)));
+    try
+        selected = cell2mat(struct2cell(structfun(@(x) x.selected,topview.interconditions,'UniformOutput',false)));
+    catch
+        intercondnames = fieldnames(topview.interconditions);
+        for i=1:size(intercondnames,1)
+           if(~isfield(topview.interconditions.(intercondnames{i}),'selected'))
+               topview.interconditions.(intercondnames{i}).selected = false;
+           end
+        end
+        selected = cell2mat(struct2cell(structfun(@(x) x.selected,topview.interconditions,'UniformOutput',false)));
+    end
     interconditions = interconditions(selected);
     rows = sum(selected);
     suporinfra = topview.suporinfra;
@@ -31,7 +41,7 @@ function plotPseudoTtest(topview,tail)
             x = topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['xi_' suporinfra{j}])./100; %(1,:)
             y = topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['yi_' suporinfra{j}])./100; %(:,1)
             hsp(i,1) = subplot_tight(rows,6,(i-1)*6+1,marg1);
-            im = topview.conditions.(condnames{1}).(['topview_' suporinfra{j} '_mean_interpol']);
+            im = topview.conditions.(condnames{1}).(['topview_' suporinfra{j} '_mean_interpol_smooth']);
 %             im = mat2im(im,jet(1000));
 %             im = nan2white(im);
             pcolor_rgb(x,y,im);
@@ -43,7 +53,7 @@ function plotPseudoTtest(topview,tail)
             colorbar('location','EastOutside')
             
             hsp(i,2) = subplot_tight(rows,6,(i-1)*6+2,marg1);
-            im = topview.conditions.(condnames{2}).(['topview_' suporinfra{j} '_mean_interpol']);
+            im = topview.conditions.(condnames{2}).(['topview_' suporinfra{j} '_mean_interpol_smooth']);
             pcolor_rgb(x,y,im);
 %             imagesc(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['xi_' suporinfra{j}])(1,:)/100,topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['yi_' suporinfra{j}])(:,1)/100,im);
             hold on;
@@ -96,8 +106,15 @@ function plotPseudoTtest(topview,tail)
                     xlim([min(x)-mean(diff(x))/2 max(x)+mean(diff(x))/2]);
                 case '2-tailed'
                     [val1 x1] = hist(topview.interconditions.(interconditions{i}).(['Tmax_deactivation_' suporinfra{j}]));
-                    [val2 x2] = hist(topview.interconditions.(interconditions{i}).(['Tmax_activation_' suporinfra{j}]));
-                    bar([x1 x2],[val1 zeros(1,10); zeros(1,10) val2]','hist');
+                    tmp = topview.interconditions.(interconditions{i}).(['Tmax_deactivation_' suporinfra{j}])(:);
+                    x1 = min(tmp):-min(tmp)/10:0;
+                    x1b = min(tmp)-min(tmp)/20:-min(tmp)/10:0;
+                    val1 = histcounts(tmp,[x1(1:end-1) inf]);
+                    tmp = topview.interconditions.(interconditions{i}).(['Tmax_activation_' suporinfra{j}]);
+                    x2 = 0:max(tmp)/10:max(tmp);
+                    x2b = max(tmp)/20:max(tmp)/10:max(tmp);
+                    val2 = histcounts(tmp,[-inf x2(2:end)]);
+                    bar([x1b x2b],[val1 val2]);
                     ylims = get(gca,'Ylim');
                     hold on;
                     plot(repmat(topview.interconditions.(interconditions{i}).(['criticalvalue_activation_2tailed_' suporinfra{j}]),1,2),ylims,'r-');

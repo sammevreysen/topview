@@ -11,5 +11,6 @@ function mice = interpolate_mice_gm(topview)
             yi = topview.generalmodel.(topview.mice.(mouse).hemisphere).(['yi_' suporinfra{h}]);
             vnnan = ismember(topview.generalmodel.(topview.mice.(mouse).hemisphere).bregmas(:,1),topview.mice.(mouse).bregmas);
             mice.(mouse).([suporinfra{h} 'interpol_gm']) = concave_griddata(x(vnnan,:),y(vnnan,:),v,xi,yi);
+            mice.(mouse).([suporinfra{h} 'interpol_gm_smooth']) = smoothfct(topview,mice.(mouse).([suporinfra{h} 'interpol_gm']));
         end
     end

@@ -18,13 +18,16 @@ function topview = createTopviewFile(setuptable)
     [setuptable idx] = sortrows(tmp,[1 2 7]);
     topview.conditionnames = unique(setuptable(:,1));
     topview.micenames = unique(setuptable(:,2));
-    topview.bregmas = unique(cell2mat(arrayfun(@(x) x{:}.bregma,setuptable(:,5),'UniformOutput',false)));
+    bregmas = unique(cell2mat(arrayfun(@(x) x{:}.bregma,setuptable(:,5),'UniformOutput',false)));
+    topview.bregmas = (min(bregmas):10:max(bregmas))';
     topview.segments = unique(setuptable{1,6}.segments);
     topview.arealborders = unique(setuptable{1,5}.arealborders);
     topview.areas = setuptable{1,5}.areas;
     topview.pixpermm = 52.3864;
     topview.lr = lr;
     topview.suporinfra = suporinfra;
+    topview.smoothwindow = 0.2;
+    topview.gridsize = 0.1;
     for i=1:size(topview.conditionnames,1)
         topview.conditions.(topview.conditionnames{i}).mice = unique(setuptable(strcmp(setuptable(:,1),topview.conditionnames{i}),2));
         topview.conditions.(topview.conditionnames{i}).hemisphere = lr{strcmp(topview.conditionnames{i}(end-2:end),'_RH')+1};
@@ -37,11 +40,12 @@ function topview = createTopviewFile(setuptable)
             topview.mice.(mouse).bregmas = cell2mat(cellfun(@(x) x.bregma,setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false));
             topview.mice.(mouse).segments = cell2mat(cellfun(@(x) x.bregma,setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false));
             for h=1:length(suporinfra)
-                topview.mice.(mouse).(suporinfra{h}) = (1-(cell2mat(cellfun(@(x) x.(['mean' suporinfra{h} '_raw']), setuptable(strcmp(setuptable(:,2),mouse),6),'UniformOutput',false))./repmat(cell2mat(cellfun(@(x) x.meanbg, setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false)),1,topview.segments))).*100;
+                %calc relative signal and interpolate missing values
+                topview.mice.(mouse).(suporinfra{h}) = inpaint_nans_no_extrapolation((1-(cell2mat(cellfun(@(x) x.(['mean' suporinfra{h} '_raw']), setuptable(strcmp(setuptable(:,2),mouse),6),'UniformOutput',false))./repmat(cell2mat(cellfun(@(x) x.meanbg, setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false)),1,topview.segments))).*100);
                 topview.mice.(mouse).(['arearel' suporinfra{h}]) = cell2mat(cellfun(@(x) x.([toporbot{h} 'arealrel']),setuptable(strcmp(setuptable(:,2),mouse),6),'UniformOutput',false));
             end
         catch
-            fprintf('problem %d - %s',i,topview.micenames{i});
+            fprintf('problem %d - %s\n',i,topview.micenames{i});
         end
     end
     topview.normalizetomouse = NaN;

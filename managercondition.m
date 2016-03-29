@@ -113,10 +113,10 @@ function selecttable(hObject,callbackdata)
                 if(isfield(handles.topview,'interconditions') && isfield(handles.topview.interconditions,conditioncombname))
                     handles.topview.interconditions = rmfield(handles.topview.interconditions,conditioncombname);
                 end
-                fprintf('Running pseudo T-test statistics \nfor supra ');
-                handles.topview = runPseudoTtest(handles.topview,data{callbackdata.Indices(1),2},data{callbackdata.Indices(1),3},'supra',equalvariances);
-                fprintf('\nfor infra ');
-                handles.topview = runPseudoTtest(handles.topview,data{callbackdata.Indices(1),2},data{callbackdata.Indices(1),3},'infra',equalvariances);
+                for i = 1:size(handles.topview.suporinfra,1)
+                    fprintf('Running pseudo T-test statistics \nfor %s\n',handles.topview.suporinfra{i});
+                    handles.topview = runPseudoTteststepdown(handles.topview,data{callbackdata.Indices(1),2},data{callbackdata.Indices(1),3},handles.topview.suporinfra{i},equalvariances);
+                end
                 saveProject(handles,'topview');
                 data{callbackdata.Indices(1),6} = callbackdata.Indices(2) == 6;
                 data{callbackdata.Indices(1),7} = callbackdata.Indices(2) == 7;
@@ -158,7 +158,7 @@ function push_drawstats_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     tails = get(handles.popup_tails,'String');
     tail = tails{get(handles.popup_tails,'Value')};
-    plotPseudoTtest(handles.topview,tail);
+    plotPseudoTteststepdown(handles.topview,tail);
 
 
 % --------------------------------------------------------------------
@@ -180,14 +180,17 @@ function menu_calcpTtseqvar_Callback(hObject, eventdata, handles)
         handles.topview = rmfield(handles.topview,'interconditions');
     end
     for i=1:size(data,1)
-        fprintf('%d/%d\n',i,size(data,1));
-        handles.topview = runPseudoTtest(handles.topview,data{i,2},data{i,3},'supra',equalvariances);
-        fprintf('\n');
-        handles.topview = runPseudoTtest(handles.topview,data{i,2},data{i,3},'infra',equalvariances);
-        fprintf('\n');
-        data{i,6} = true;
-        data{i,7} = false;
-        data{i,1} = true;
+        if(~strcmp(data{i,2},'') && ~strcmp(data{i,3},''))
+            fprintf('%d/%d\n',i,size(data,1));
+            for j = 1:size(handles.topview.suporinfra,1)
+                fprintf('Running pseudo T-test statistics \nfor %s\n',handles.topview.suporinfra{j});
+                handles.topview = runPseudoTteststepdown(handles.topview,data{i,2},data{i,3},handles.topview.suporinfra{j},equalvariances);
+            end
+            data{i,6} = true;
+            data{i,7} = false;
+            data{i,1} = true;
+            set(handles.uitable,'Data',data);
+        end
     end
     saveProject(handles,'topview');
     guidata(hObject,handles);
@@ -205,10 +208,11 @@ function menu_calcpTtsneqvar_Callback(hObject, eventdata, handles)
     end
     for i=1:size(data,1)
         if(~strcmp(data{i,2},'') && ~strcmp(data{i,3},''))
-            handles.topview = runPseudoTtest(handles.topview,data{i,2},data{i,3},'supra',equalvariances);
-            fprintf('\n');
-            handles.topview = runPseudoTtest(handles.topview,data{i,2},data{i,3},'infra',equalvariances);
-            fprintf('\n');
+            fprintf('%d/%d\n',i,size(data,1));
+            for j = 1:size(handles.topview.suporinfra,1)
+                fprintf('Running pseudo T-test statistics \nfor %s\n',handles.topview.suporinfra{j});
+                handles.topview = runPseudoTteststepdown(handles.topview,data{i,2},data{i,3},handles.topview.suporinfra{j},equalvariances);
+            end
             data{i,6} = false;
             data{i,7} = true;
             data{i,1} = true;

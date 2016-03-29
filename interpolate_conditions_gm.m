@@ -3,29 +3,46 @@ function conditions = interpolate_conditions_gm(topview)
         condition = topview.conditionnames{i};
         conditions.(condition) = interpolate_condition(topview,condition);
     end
-    
+end
+
 function out = interpolate_condition(topview,condition)
     suporinfra = topview.suporinfra;
     micelist = topview.conditions.(condition).mice;
     arealborders = topview.arealborders;
     bregmalist = [];
     segments = 1:topview.segments;
-    for jjj = 1:size(micelist,1)
-        bregmalist = [bregmalist; topview.mice.(micelist{jjj}).bregmas];
-    end
-    bregmalist = unique(bregmalist);
+%     for jjj = 1:size(micelist,1)
+%         bregmalist = [bregmalist; topview.mice.(micelist{jjj}).bregmas];
+%     end
     out = topview.conditions.(condition);
-    out.bregmas = bregmalist;
+    out.bregmas = topview.bregmas;
     out.segments = segments;
     %stack and align all animal in matrix (bregmas x segments x
     %animals)
     for i=1:length(suporinfra)
-        out.(suporinfra{i}) = nan(size(bregmalist,1),size(segments,2),size(micelist,1));
-        out.(['arearel' suporinfra{i}]) = nan(size(bregmalist,1),arealborders,size(micelist,1));
+        out.(suporinfra{i}) = nan(size(out.bregmas,1),size(segments,2),size(micelist,1));
+        out.(['arearel' suporinfra{i}]) = nan(size(out.bregmas,1),arealborders,size(micelist,1));
         for jjj = 1:size(micelist,1)
-            out.(suporinfra{i})(ismember(bregmalist,topview.mice.(micelist{jjj}).bregmas),:,jjj) = topview.mice.(micelist{jjj}).(suporinfra{i}).*topview.mice.(micelist{jjj}).(['normalizefactor_' suporinfra{i}]);
-            out.(['arearel' suporinfra{i}])(ismember(bregmalist,topview.mice.(micelist{jjj}).bregmas),:,jjj) = topview.mice.(micelist{jjj}).(['arearel' suporinfra{i}]);
+            out.(suporinfra{i})(ismember(out.bregmas,topview.mice.(micelist{jjj}).bregmas),:,jjj) = topview.mice.(micelist{jjj}).(suporinfra{i}).*topview.mice.(micelist{jjj}).(['normalizefactor_' suporinfra{i}]);
+            out.(['arearel' suporinfra{i}])(ismember(out.bregmas,topview.mice.(micelist{jjj}).bregmas),:,jjj) = topview.mice.(micelist{jjj}).(['arearel' suporinfra{i}]);
         end
+        %interpolate per animal to grid without extrapolation (already done
+        %in createTopviewFile
+%         for jjj = 1:size(out.(suporinfra{i}),3)
+%             tmp = out.(suporinfra{i})(:,1,jjj);
+%             sel = true(size(tmp));
+%             %remove outerpolation
+%             idf = find(~isnan(tmp),1,'first');
+%             if(idf > 1)
+%                 sel(1:idf-1) = 0;
+%             end
+%             idf = find(~isnan(tmp),1,'last');
+%             if(idf < length(tmp))
+%                 sel(idf+1:end) = 0;
+%             end
+%             %smart interpolate
+%             out.(suporinfra{i})(sel,:,jjj) = inpaint_nans(out.(suporinfra{i})(sel,:,jjj),3);
+%         end
         out.([suporinfra{i} '_mean']) = nanmean(out.(suporinfra{i}),3);
         out.(['arearel' suporinfra{i} '_mean']) = nanmean(out.(['arearel' suporinfra{i}]),3);
         
@@ -36,7 +53,7 @@ function out = interpolate_condition(topview,condition)
         out.([suporinfra{i} '_mean_interpol']) = interp2(x,y,out.([suporinfra{i} '_mean']),xi,yi,'linear');
         out.segmentsinterpol = xi(1,:);
         out.bregmasinterpol = yi(:,1);
-        [xa,ya] = meshgrid(1:topview.arealborders,bregmalist);
+        [xa,ya] = meshgrid(1:topview.arealborders,out.bregmas);
         [xai,yai] = meshgrid(1:topview.arealborders,ya(1):1:ya(end));
         out.(['arearel' suporinfra{i} '_mean_interpol']) = interp2(xa,ya,out.(['arearel' suporinfra{i} '_mean']),xai,yai,'linear');
         %topview
@@ -61,4 +78,6 @@ function out = interpolate_condition(topview,condition)
         out.(['topview_area_' suporinfra{i} '_mean_interpol']) = interp2(xa,ya,va,xai,yai,'linear');
         out.(['topview_area_' suporinfra{i} '_xi']) = xai;
         out.(['topview_area_' suporinfra{i} '_yi']) = yai;
+        out.(['topview_' suporinfra{i} '_mean_interpol_smooth']) = smoothfct(topview,tmp);
     end
+end

@@ -22,7 +22,7 @@ function varargout = managermice(varargin)
 
 % Edit the above text to modify the response to help managermice
 
-% Last Modified by GUIDE v2.5 28-Jan-2016 15:22:00
+% Last Modified by GUIDE v2.5 18-Mar-2016 14:07:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,7 +55,7 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
     %load files
     projectname = cell2mat(varargin{1});
     handles.projectname = projectname;
-    fprintf('Loading project...');
+    fprintf('Loading project...\n');
     vars = openProject(projectname);
     varfields = fieldnames(vars);
     for i=1:size(varfields,1)
@@ -368,7 +368,7 @@ function drawpercondition(hObject,handles,view)
                 case 'topview'
                     figure(fig(j));
                     figsub(j,i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
-                    pcolor_rgb(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol']));
+                    pcolor_rgb(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol_smooth']));
                     hold on;
                     plot(handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_mean_interpol'])/100,handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_yi'])/100,'k-');
                     hold off;
@@ -453,3 +453,26 @@ function push_drawpermouse_gm_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     drawpermouse(hObject,handles,'topview_gm');
+
+
+% --------------------------------------------------------------------
+function Untitled_2_Callback(hObject, eventdata, handles)
+% hObject    handle to Untitled_2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_smoothwindow_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_smoothwindow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    val = str2num(cell2mat(inputdlg('Size of smoothing window in mm, 0 to disable','Smoothing window',1)));
+    set(hObject,'Label',sprintf('Smooth window: %0.3f mm',val));
+    handles.topview.smoothwindow = val;
+    fprintf('Recalculating topview per animal\n');
+    handles.topview = interpolate_mice_gm(handles.topview);
+    fprintf('Recalculating topview per condition\n');
+    handles.topview = interpolate_conditions_gm(handles.topview);
+    fprintf('Finished\n');
+    guidata(hObject,handles);

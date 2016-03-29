@@ -21,7 +21,7 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
 %     if ~strcmp(condnameA(end-1:end),condnameB(end-1:end))
 %         error('Both conditions have to be from the same hemisphere')
 %     end
-    lr = {'left';'right'};
+    lr = topview.lr;
     hemisphere = lr{strcmp(condnameA(end-2:end),'_RH')+1};
     
     %create intercondition structure
@@ -71,11 +71,8 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
         for kkk = 1:size(perms,2)
             bregmasel = ismember(bregmas,topview.mice.(perms{jjj,kkk}).bregmas);
             condA(bregmasel,:,kkk) = topview.mice.(perms{jjj,kkk}).(suporinfra);
-            condA_interpol(:,:,kkk) = topview.mice.(perms{jjj,kkk}).([suporinfra 'interpol_gm']);
-        end
-        condA_mean = nanmean(condA,3);
-        nnanA = ~isnan(condA_mean(:,1));
-        condA_mean_interpol = griddata(xs(nnanA,:),ys(nnanA,:),condA_mean(nnanA,:),xi,yi);
+            condA_interpol(:,:,kkk) = topview.mice.(perms{jjj,kkk}).([suporinfra 'interpol_gm_smooth']);
+        end        
                 
         %condition B
         condB = nan(size(ys,1),size(xs,2),size(permscomplement,2));  
@@ -83,24 +80,27 @@ function topview = runPseudoTtest(topview,condnameA,condnameB,suporinfra,equalva
         for kkk = 1:size(permscomplement,2)
             bregmasel = ismember(bregmas,topview.mice.(permscomplement{jjj,kkk}).bregmas);
             condB(bregmasel,:,kkk) = topview.mice.(permscomplement{jjj,kkk}).(suporinfra);
-            condB_interpol(:,:,kkk) = topview.mice.(permscomplement{jjj,kkk}).([suporinfra 'interpol_gm']);
+            condB_interpol(:,:,kkk) = topview.mice.(permscomplement{jjj,kkk}).([suporinfra 'interpol_gm_smooth']);
         end
+        
+        %mean
+        condA_mean = nanmean(condA,3);
         condB_mean = nanmean(condB,3);
-        nnanB = ~isnan(condB_mean(:,1));
-        condB_mean_interpol = griddata(xs(nnanB,:),ys(nnanB,:),condB_mean(nnanB,:),xi,yi);
         
         %create mask to normalize against B
-        nnanmask = nnanA & nnanB;
-        temp = condB_mean(nnanmask,:);
-        normB = mean(temp(:));
-        
-        condA_mean = nanmean(condA,3)./normB;
         nnanA = ~isnan(condA_mean(:,1));
-        condA_mean_interpol = griddata(xs(nnanA,:),ys(nnanA,:),condA_mean(nnanA,:),xi,yi);
-        
-        condB_mean = nanmean(condB,3)./normB;
         nnanB = ~isnan(condB_mean(:,1));
-        condB_mean_interpol = griddata(xs(nnanB,:),ys(nnanB,:),condB_mean(nnanB,:),xi,yi);
+        nnanmask = nnanA & nnanB;
+        tmp = condB_mean(nnanmask,:);
+        normB = mean(tmp(:));
+        
+        condA_mean = condA_mean./normB;
+        condA_interpol = condA_interpol./normB;
+        condA_mean_interpol = smoothfct(topview,griddata(xs(nnanA,:),ys(nnanA,:),condA_mean(nnanA,:),xi,yi));
+        
+        condB_mean = condB_mean./normB;
+        condB_interpol = condB_interpol./normB;
+        condB_mean_interpol = smoothfct(topview,griddata(xs(nnanB,:),ys(nnanB,:),condB_mean(nnanB,:),xi,yi));
         
         
         %shift scale and take difference
