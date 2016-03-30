@@ -16,7 +16,6 @@ function plotPseudoTteststepdown(topview,tail)
     suporinfra = topview.suporinfra;
     for j=1:length(suporinfra)
         fig = figure('Name',suporinfra{j});
-        colormap jet;
         opengl('hardware');
         
         outerpos = [0 0 26 20];
@@ -51,8 +50,7 @@ function plotPseudoTteststepdown(topview,tail)
             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title(['A: ' condnames{1}]);
-            colorbar('location','EastOutside')
-            
+                        
             hsp(i,2) = subplot_tight(rows,columns,(i-1)*columns+2,marg1);
             im = topview.conditions.(condnames{2}).(['topview_' suporinfra{j} '_mean_interpol_smooth']);
             pcolor_rgb(x,y,im);
@@ -62,8 +60,7 @@ function plotPseudoTteststepdown(topview,tail)
             plot(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title(['B: ' condnames{2}]);
-            colorbar('location','EastOutside')
-            
+                        
             hsp(i,3) = subplot_tight(rows,columns,(i-1)*columns+3,marg1);
             im = topview.interconditions.(interconditions{i}).(['topviewABdiff_relative_' suporinfra{j}]); %,isnan(topview.interconditions.(interconditions{i}).(['tstat_' suporinfra{j}])));
             pcolor_rgb(x,y,im);
@@ -75,8 +72,7 @@ function plotPseudoTteststepdown(topview,tail)
             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title('A-B')
-            colorbar('location','EastOutside')
-            
+                        
             hsp(i,4) = subplot_tight(rows,columns,(i-1)*columns+4,marg1);
             switch tail
                 case '1-tailed Activation'
@@ -87,26 +83,44 @@ function plotPseudoTteststepdown(topview,tail)
                     
             end
             pcolor_rgb(x,y,im);
-            set(gca,'Clim',[min(im(:)) max(im(:))]);
             hold on;
             plot_contours(interconditions{i},suporinfra{j},tail);
             plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title('Pseudo T-test');
-            colorbar('location','EastOutside')
             
+            ticks = fliplr(0.05:-0.005:1/topview.interconditions.(interconditions{i}).N);
+            ticksstr = arrayfun(@num2str,ticks,'unif',0);
+            
+            for k=1:3
+                axes(hsp(i,k));
+                colormap(hsp(i,k),jet);
+                colorbar;
+            end
+                        
         end
+        
+        
         ylim = cell2mat(get(hsp(:,1:4),'Ylim'));
         set(hsp(:,1:4),'Ylim',[min(ylim(:,1)) max(ylim(:,2))]);
-        clim = cell2mat(get(hsp(:,1:2),'Clim'));
-        set(hsp(:,1:2),'Clim',[min(clim(:,1)) max(clim(:,2))]);
+%         clim = cell2mat(get(hsp(:,1:2),'Clim'));
+%         set(hsp(:,1:2),'Clim',[min(clim(:,1)) max(clim(:,2))]);
+        set(hsp(:,1:2),'Clim',[0 100]);
         set(hsp(:,3),'Clim',[-1 1]);
         set(hsp(:,1:4),'DataAspectRatio',[1 1 1]);
         set(hsp, 'Uicontextmenu',cmenu);
 %         colormap(gcf,'jet');
         set(findobj('Type','axes'),'FontSize',7)
         set(hsp,'TitleFontSizeMultiplier',1);
-%         set(hsp,'YDir','normal');
+        for i=1:rows
+            axes(hsp(i,4));
+            colormap([flipud(autumn(128)); 0 0 0]);
+            caxis(hsp(i,4),[1/topview.interconditions.(interconditions{i}).N 0.050001]);
+            ch = colorbar;
+            tickl = get(ch,'TickLabels');
+            tickl{end} = ['>' tickl{end}];
+            set(ch,'TickLabels',tickl);
+        end
     end
     function plot_contours(intercondition,suporinfra,tail)
         %debug
