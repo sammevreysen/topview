@@ -33,7 +33,11 @@ function plotPseudoTteststepdown(topview,tail)
         uimenu(cmenu, 'Label', 'Enlarge', 'Callback', @enlargesubplot);
         hMenu = uimenu(fig,'Label','Save');
         uimenu(hMenu,'Label','Save as PDF...','Callback',@saveFigAsPDF);
-        columns = 4;
+        if(strcmp(tail,'2-tailed'))
+            columns = 5;
+        else
+            columns = 4;
+        end
         hsp = zeros(rows,columns);
         for i=1:rows
             condnames = topview.interconditions.(interconditions{i}).conditions;
@@ -73,24 +77,44 @@ function plotPseudoTteststepdown(topview,tail)
             hold off;
             title('A-B')
                         
-            hsp(i,4) = subplot_tight(rows,columns,(i-1)*columns+4,marg1);
-            switch tail
-                case '1-tailed Activation'
-                    im = topview.interconditions.(interconditions{i}).(['Psdmax' suporinfra{j}]);
-                case '1-tailed Deactivation'
-                    im = topview.interconditions.(interconditions{i}).(['Psdmin' suporinfra{j}]);
-                case '2-tailed'
-                    
-            end
-            pcolor_rgb(x,y,im);
-            hold on;
-            plot_contours(interconditions{i},suporinfra{j},tail);
-            plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
-            hold off;
-            title('Pseudo T-test');
             
-            ticks = fliplr(0.05:-0.005:1/topview.interconditions.(interconditions{i}).N);
-            ticksstr = arrayfun(@num2str,ticks,'unif',0);
+            if(strcmp(tail,'2-tailed'))
+                imact = topview.interconditions.(interconditions{i}).(['Psdmax' suporinfra{j}]);
+                imdeact = topview.interconditions.(interconditions{i}).(['Psdmin' suporinfra{j}]);
+                
+                hsp(i,4) = subplot_tight(rows,columns,(i-1)*columns+4,marg1);
+                pcolor_rgb(x,y,imact);
+                hold on;
+                plot_contours(interconditions{i},suporinfra{j},'2-tailed Activation');
+                plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
+                hold off;
+                title('Pseudo T-test Act');
+                
+                hsp(i,5) = subplot_tight(rows,columns,(i-1)*columns+5,marg1);
+                pcolor_rgb(x,y,imdeact);
+                hold on;
+                plot_contours(interconditions{i},suporinfra{j},'2-tailed Deactivation');
+                plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
+                hold off;
+                title('Pseudo T-test Deact');
+                specialcolormapcols = [4 5];
+            else
+                switch tail
+                    case '1-tailed Activation'
+                        im = topview.interconditions.(interconditions{i}).(['Psdmax' suporinfra{j}]);
+                    case '1-tailed Deactivation'
+                        im = topview.interconditions.(interconditions{i}).(['Psdmin' suporinfra{j}]);                        
+                end
+                hsp(i,4) = subplot_tight(rows,columns,(i-1)*columns+4,marg1);
+                pcolor_rgb(x,y,im);
+                hold on;
+                plot_contours(interconditions{i},suporinfra{j},tail);
+                plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
+                hold off;
+                title('Pseudo T-test');
+                specialcolormapcols = 4;
+                
+            end
             
             for k=1:3
                 axes(hsp(i,k));
@@ -113,13 +137,15 @@ function plotPseudoTteststepdown(topview,tail)
         set(findobj('Type','axes'),'FontSize',7)
         set(hsp,'TitleFontSizeMultiplier',1);
         for i=1:rows
-            axes(hsp(i,4));
-            colormap([flipud(autumn(128)); 0 0 0]);
-            caxis(hsp(i,4),[1/topview.interconditions.(interconditions{i}).N 0.050001]);
-            ch = colorbar;
-            tickl = get(ch,'TickLabels');
-            tickl{end} = ['>' tickl{end}];
-            set(ch,'TickLabels',tickl);
+            for k=specialcolormapcols
+                axes(hsp(i,k));
+                colormap([flipud(autumn(128)); 0 0 0]);
+                caxis(hsp(i,k),[1/topview.interconditions.(interconditions{i}).N 0.050001]);
+                ch = colorbar;
+                tickl = get(ch,'TickLabels');
+                tickl{end} = ['>' tickl{end}];
+                set(ch,'TickLabels',tickl);
+            end
         end
     end
     function plot_contours(intercondition,suporinfra,tail)
@@ -145,6 +171,16 @@ function plotPseudoTteststepdown(topview,tail)
                     if(sum(contours(:))>0)
                         contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'k','LineStyle',linestyle{ii});
                     end
+                    contours = topview.interconditions.(intercondition).(['Psdmin' suporinfra]) <= alpha(ii)/2;
+                    if(sum(contours(:))>0)
+                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'w','LineStyle',linestyle{ii});
+                    end
+                case '2-tailed Activation'
+                    contours = topview.interconditions.(intercondition).(['Psdmax' suporinfra]) <= alpha(ii)/2;
+                    if(sum(contours(:))>0)
+                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'k','LineStyle',linestyle{ii});
+                    end
+                case '2-tailed Deactivation'
                     contours = topview.interconditions.(intercondition).(['Psdmin' suporinfra]) <= alpha(ii)/2;
                     if(sum(contours(:))>0)
                         contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'w','LineStyle',linestyle{ii});
