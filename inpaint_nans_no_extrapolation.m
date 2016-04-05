@@ -11,4 +11,5 @@ function out = inpaint_nans_no_extrapolation(in)
         sel(idf+1:end) = 0;
     end
     %smart interpolate
-    out = inpaint_nans(in(sel,:),3);
+    out = nan(size(in));
+    out(sel,:) = inpaint_nans(in(sel,:),3);
