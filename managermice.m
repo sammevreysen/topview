@@ -297,24 +297,25 @@ function drawpermouse(hObject,handles,view)
                         ys = repmat(handles.topview.mice.(mouse).bregmas,1,size(xs,2));
                         [xi,yi] = meshgrid(min(xs(:)):max(xs(:)),min(bregmas(:)):max(bregmas(:))); %abs(min(min(xsupra),0)-max(max(xsupra),0))/500
                         interpolprojected = concave_griddata(xs,ys,v,xi,yi);
+                        interpolprojected  = smoothfct(handles.topview,interpolprojected);
                     else
                         xi = handles.topview.generalmodel.(handles.topview.mice.(mouse).hemisphere).(['xi_' suporinfra{j}]);
                         yi = handles.topview.generalmodel.(handles.topview.mice.(mouse).hemisphere).(['yi_' suporinfra{j}]);
-                        interpolprojected = handles.topview.mice.(mouse).([suporinfra{j} 'interpol_gm']);
+                        interpolprojected = handles.topview.mice.(mouse).([suporinfra{j} 'interpol_gm_smooth']);
                     end
-                    pcolor_rgb(xi/100,yi/100,interpolprojected);
+                    pcolor_rgb(xi/100,-yi/100,interpolprojected);
                     hold on;
                     if(strcmp(view,'topview'))
-                        plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,handles.topview.mice.(mouse).bregmas/100,'k-');
+                        plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,-handles.topview.mice.(mouse).bregmas/100,'k-');
                     else
-                        plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,handles.topview.bregmas/100,'k-');
+                        plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,-handles.topview.bregmas/100,'k-');
                     end
                     if(all(xi < 0))
                         ls = 'k<';
                     else
                         ls = 'k>';
                     end
-                    plot(zeros(1,size(handles.topview.mice.(mouse).bregmas,1)),handles.topview.mice.(mouse).bregmas/100,ls);
+                    plot(-3.7*ones(1,size(handles.topview.mice.(mouse).bregmas,1)),-handles.topview.mice.(mouse).bregmas/100,ls);
                     hold off;
             end
             
@@ -325,20 +326,22 @@ function drawpermouse(hObject,handles,view)
             else
                 title([mouse ' - ' suporinfra{j}]);
             end
-            ylims(j,i,:) = ylim;
-            xlims(j,i,:) = xlim;
-            clims(j,i,:) = caxis;
+            ylims{j,i} = ylim;
+            xlims{j,i} = xlim;
+            clims{j,i} = caxis;
         end
         
     end
-    ylims = reshape(ylims,[],2);
-    xlims = reshape(xlims,[],2);
-    clims = reshape(clims,[],2);
+    ylims = cell2mat(ylims(:));
+    xlims = cell2mat(xlims(:));
+    clims = cell2mat(clims(:));
+    figsub(1:2,:) = [];
     set(figsub,'Clim',[0 100]);
     set(figsub,'Ylim',[min(ylims(:,1)) max(ylims(:,2))]);
 %     set(figsub,'Xlim',[min(xlims(:,1)) max(xlims(:,2))]);
     set(figsub,'Xlim',[min(xlims(:,1))*(1 - (sign(min(xlims(:,1)))*0.03)) max(xlims(:,2))*(1 + (sign(min(xlims(:,1)))*0.03))]);
     set(fig,'Visible','on');
+    axis ij equal tight;
     guidata(hObject,handles);
 %     saveProject(handles,'topview');
         
