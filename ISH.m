@@ -23,7 +23,7 @@ function varargout = ISH(varargin)
 
 % Edit the above text to modify the response to help ISH
 
-% Last Modified by GUIDE v2.5 23-Feb-2016 18:15:00
+% Last Modified by GUIDE v2.5 14-Apr-2016 11:00:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2672,4 +2672,18 @@ function menu_alignbregmas_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     handles.setuptable = alignbregmas(handles.setuptable);
     fprintf('Bregmas aligned\n');
+    guidata(hObject,handles);
+
+
+% --------------------------------------------------------------------
+function menu_resetbregma_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_resetbregma (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    setuptable = handles.setuptable;
+    bregma = arrayfun(@(y) str2mat(y{:}(2:end)),arrayfun(@(x) regexp(x{:}(end-8:end),'[_-]\d{3}','match','once'),setuptable(:,3),'UniformOutput',false),'UniformOutput',false);
+    for i=1:size(setuptable,1)
+        setuptable{i,5}.bregma = str2num(bregma{i});
+    end
+    handles.setuptable = setuptable;
     guidata(hObject,handles);
