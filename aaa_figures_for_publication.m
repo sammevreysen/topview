@@ -1,22 +1,25 @@
 % save fig for publication
-name = 'Reference map std';
-path = 'D:\Matlab\ISHAnalysis\saved_project\MEVE_Zif268_C57BL6_17122015_FINAL\pdf\conditions\';
-
-%title(name);
-set(gca,'FontWeight','bold');
-set(gca,'LineWidth',1);
-width = 10; %cm
-height = 10;
+name = 'Figure3colorbars';
+path = '\\bio-srv-df002\DFN\SammeV\Documents\Doctoraat\Publicaties\ISH analysis technical paper\Figures\';
+width = 17.4; %cm
+height = 17.4;
 set(gcf,'Units','centimeters')
 set(gcf,'Position',[1 1 width height]);
-set(gca,'Units','normalized');
-set(gca,'OuterPosition',[0 0 0.9 0.9]);
+% set(gca,'Units','normalized');
+% set(gca,'OuterPosition',[0 0 1 1]);
 savefile = [path genvarname(name)];
-set(gcf,'PaperUnits','centimeters');
-set(gcf,'PaperPositionMode','auto');
-set(gcf,'PaperSize',[26 20]);
-print(gcf,'-dpdf','-r300',savefile,'-opengl');
+print(gcf,'-depsc',savefile,'-painters');
 savefig(savefile);
+
+% %title(name);
+% set(gca,'FontWeight','bold');
+% set(gca,'LineWidth',1);
+% 
+% set(gcf,'PaperUnits','centimeters');
+% set(gcf,'PaperPositionMode','auto');
+% set(gcf,'PaperSize',[26 20]);
+
+
 
 %%
 %fig 1E
