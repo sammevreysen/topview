@@ -47,35 +47,37 @@ function plotPseudoTteststepdown(topview,tail)
             im = topview.conditions.(condnames{1}).(['topview_' suporinfra{j} '_mean_interpol_smooth']);
 %             im = mat2im(im,jet(1000));
 %             im = nan2white(im);
-            pcolor_rgb(x,y,im);
+            pcolor_rgb(x,-y,im);
 %             imagesc(x,y,im);
             hold on;
             plot_contours(interconditions{i},suporinfra{j},tail);
-            plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
+            plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,-topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title(['A: ' condnames{1}]);
+            axis xy equal tight;
                         
             hsp(i,2) = subplot_tight(rows,columns,(i-1)*columns+2,marg1);
             im = topview.conditions.(condnames{2}).(['topview_' suporinfra{j} '_mean_interpol_smooth']);
-            pcolor_rgb(x,y,im);
+            pcolor_rgb(x,-y,im);
 %             imagesc(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['xi_' suporinfra{j}])(1,:)/100,topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['yi_' suporinfra{j}])(:,1)/100,im);
             hold on;
             plot_contours(interconditions{i},suporinfra{j},tail);
-            plot(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).bregmas(:,1)/100,'k-');
+            plot(topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).(['areas_' suporinfra{j}])/100,-topview.generalmodel.(topview.conditions.(condnames{2}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title(['B: ' condnames{2}]);
+            axis xy equal tight;
                         
             hsp(i,3) = subplot_tight(rows,columns,(i-1)*columns+3,marg1);
             im = topview.interconditions.(interconditions{i}).(['topviewABdiff_relative_' suporinfra{j}]); %,isnan(topview.interconditions.(interconditions{i}).(['tstat_' suporinfra{j}])));
-            pcolor_rgb(x,y,im);
+            pcolor_rgb(x,-y,im);
 %             imagesc(topview.interconditions.(interconditions{i}).([suporinfra{j} '_segments_interpol'])(1,:)/100,topview.interconditions.(interconditions{i}).([suporinfra{j} '_bregmas_interpol'])(:,1)/100,im);
             hold on;
-            plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
+            plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,-topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             plot_contours(interconditions{i},suporinfra{j},tail);
 %             plot_contours(topview,interconditions{i},suporinfra{j},tail,'power');
-            plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
             hold off;
             title('A-B')
+            axis xy equal tight;
                         
             
             if(strcmp(tail,'2-tailed'))
@@ -83,20 +85,24 @@ function plotPseudoTteststepdown(topview,tail)
                 imdeact = topview.interconditions.(interconditions{i}).(['Psdmin' suporinfra{j}]);
                 
                 hsp(i,4) = subplot_tight(rows,columns,(i-1)*columns+4,marg1);
-                pcolor_rgb(x,y,imact);
+                pcolor_rgb(x,-y,imact);
                 hold on;
                 plot_contours(interconditions{i},suporinfra{j},'2-tailed Activation');
-                plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
+                plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,-topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
                 hold off;
                 title('Pseudo T-test Act');
+                set(gca,'Tag','pval_cmap');
+                axis xy equal tight;
                 
                 hsp(i,5) = subplot_tight(rows,columns,(i-1)*columns+5,marg1);
-                pcolor_rgb(x,y,imdeact);
+                pcolor_rgb(x,-y,imdeact);
                 hold on;
                 plot_contours(interconditions{i},suporinfra{j},'2-tailed Deactivation');
-                plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
+                plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,-topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
                 hold off;
                 title('Pseudo T-test Deact');
+                set(gca,'Tag','pval_cmap');
+                axis xy equal tight;
                 specialcolormapcols = [4 5];
             else
                 switch tail
@@ -106,12 +112,14 @@ function plotPseudoTteststepdown(topview,tail)
                         im = topview.interconditions.(interconditions{i}).(['Psdmin' suporinfra{j}]);                        
                 end
                 hsp(i,4) = subplot_tight(rows,columns,(i-1)*columns+4,marg1);
-                pcolor_rgb(x,y,im);
+                pcolor_rgb(x,-y,im);
                 hold on;
                 plot_contours(interconditions{i},suporinfra{j},tail);
-                plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
+                plot(topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).(['areas_' suporinfra{j}])/100,-topview.generalmodel.(topview.conditions.(condnames{1}).hemisphere).bregmas(:,1)/100,'k-');
                 hold off;
                 title('Pseudo T-test');
+                set(gca,'Tag','pval_cmap');
+                axis xy equal tight;
                 specialcolormapcols = 4;
                 
             end
@@ -119,14 +127,16 @@ function plotPseudoTteststepdown(topview,tail)
             for k=1:3
                 axes(hsp(i,k));
                 colormap(hsp(i,k),jet);
-                colorbar;
+%                 colorbar;
             end
                         
         end
         
         
-        ylim = cell2mat(get(hsp(:,1:4),'Ylim'));
-        set(hsp(:,1:4),'Ylim',[min(ylim(:,1)) max(ylim(:,2))]);
+        yl = cell2mat(get(hsp(:,1:4),'Ylim'));
+        xl = cell2mat(get(hsp(:,1:4),'Xlim'));
+        set(hsp(:,[1:4 specialcolormapcols]),'Ylim',[min(yl(:,1)) max(yl(:,2))]);
+        set(hsp(:,[1:4 specialcolormapcols]),'Xlim',[min(xl(:,1))*1.1 max(xl(:,2))*0.9]);
 %         clim = cell2mat(get(hsp(:,1:2),'Clim'));
 %         set(hsp(:,1:2),'Clim',[min(clim(:,1)) max(clim(:,2))]);
         set(hsp(:,1:2),'Clim',[0 100]);
@@ -159,31 +169,31 @@ function plotPseudoTteststepdown(topview,tail)
                 case '1-tailed Activation'
                     contours = topview.interconditions.(intercondition).(['Psdmax' suporinfra]) <= alpha(ii);
                     if(sum(contours(:))>0)
-                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'k','LineStyle',linestyle{ii});
+                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,-topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'k','LineStyle',linestyle{ii});
                     end
                 case '1-tailed Deactivation'
                     contours = topview.interconditions.(intercondition).(['Psdmin' suporinfra]) <= alpha(ii);
                     if(sum(contours(:))>0)
-                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'w','LineStyle',linestyle{ii});
+                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,-topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'w','LineStyle',linestyle{ii});
                     end
                 case '2-tailed'
                     contours = topview.interconditions.(intercondition).(['Psdmax' suporinfra]) <= alpha(ii)/2;
                     if(sum(contours(:))>0)
-                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'k','LineStyle',linestyle{ii});
+                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,-topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'k','LineStyle',linestyle{ii});
                     end
                     contours = topview.interconditions.(intercondition).(['Psdmin' suporinfra]) <= alpha(ii)/2;
                     if(sum(contours(:))>0)
-                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'w','LineStyle',linestyle{ii});
+                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,-topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'w','LineStyle',linestyle{ii});
                     end
                 case '2-tailed Activation'
                     contours = topview.interconditions.(intercondition).(['Psdmax' suporinfra]) <= alpha(ii)/2;
                     if(sum(contours(:))>0)
-                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'k','LineStyle',linestyle{ii});
+                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,-topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'k','LineStyle',linestyle{ii});
                     end
                 case '2-tailed Deactivation'
                     contours = topview.interconditions.(intercondition).(['Psdmin' suporinfra]) <= alpha(ii)/2;
                     if(sum(contours(:))>0)
-                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'w','LineStyle',linestyle{ii});
+                        contour(topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['xi_' suporinfra])/100,-topview.generalmodel.(topview.interconditions.(intercondition).hemisphere).(['yi_' suporinfra])/100,contours,'w','LineStyle',linestyle{ii});
                     end
             end
         end
