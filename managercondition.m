@@ -158,6 +158,7 @@ function push_drawstats_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     tails = get(handles.popup_tails,'String');
     tail = tails{get(handles.popup_tails,'Value')};
+    handles = checked(handles);
     plotPseudoTteststepdown(handles.topview,tail);
 
 
@@ -256,3 +257,18 @@ function popup_tails_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+function handles = checked(handles)
+    data = get(handles.uitable,'Data');
+    data(any(strcmp(data(:,2:3),''),2),:) = [];
+    lst = [];
+    for i=1:size(data,1)
+        conditioncombname = [data{i,2} '_' data{i,3}];
+        lst = [lst; {conditioncombname}];
+        handles.topview.interconditions.(conditioncombname).selected = data{i,1};
+    end
+    savedlst = fieldnames(handles.topview.interconditions);
+    trash = savedlst(~ismember(savedlst,lst));
+    for i=1:size(trash,1)
+        handles.topview.interconditions.(conditioncombname).selected = false;
+    end
