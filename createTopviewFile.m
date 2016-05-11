@@ -13,21 +13,24 @@ function topview = createTopviewFile(setuptable)
     lr = {'left';'right'};
     suporinfra = {'supra';'infra';'total'};
     toporbot = {'top';'bot';'top'}; %assume total
+    topview.gridsize = 0.1; %0.2 for rat
+    topview.pixpermm = 52.3864;
+    topview.smoothwindow = topview.gridsize*2; %0.2;
+     
     bregmas = cellfun(@(x) num2str(x.bregma),setuptable(:,5),'UniformOutput',false);
     tmp = [setuptable bregmas];
     [setuptable idx] = sortrows(tmp,[1 2 7]);
     topview.conditionnames = unique(setuptable(:,1));
     topview.micenames = unique(setuptable(:,2));
     bregmas = unique(cell2mat(arrayfun(@(x) x{:}.bregma,setuptable(:,5),'UniformOutput',false)));
-    topview.bregmas = (min(bregmas):10:max(bregmas))';
+    topview.bregmas = (min(bregmas):topview.gridsize*100:max(bregmas))';
     topview.segments = unique(setuptable{1,6}.segments);
     topview.arealborders = unique(setuptable{1,5}.arealborders);
     topview.areas = setuptable{1,5}.areas;
-    topview.pixpermm = 52.3864;
     topview.lr = lr;
     topview.suporinfra = suporinfra;
-    topview.smoothwindow = 0.2;
-    topview.gridsize = 0.1;
+   
+    
     for i=1:size(topview.conditionnames,1)
         topview.conditions.(topview.conditionnames{i}).mice = unique(setuptable(strcmp(setuptable(:,1),topview.conditionnames{i}),2));
         topview.conditions.(topview.conditionnames{i}).hemisphere = lr{strcmp(topview.conditionnames{i}(end-2:end),'_RH')+1};
@@ -149,14 +152,24 @@ function topview = createTopviewFile(setuptable)
     end
     for i=1:length(lr)
         for h=1:length(suporinfra)
+            if(any(isnan(topview.generalmodel.(lr{i}).(['mask_' suporinfra{h}])(:,1))))
+                topview.generalmodel.(lr{i}).(['mask_' suporinfra{h}]) = inpaint_nans(topview.generalmodel.(lr{i}).(['mask_' suporinfra{h}]),3);
+            end
+            if(any(isnan(topview.generalmodel.(lr{i}).(['areas_' suporinfra{h}])(:,1))))
+                for k=1:size(topview.generalmodel.(lr{i}).(['areas_' suporinfra{h}]),2)
+                    tmp = topview.generalmodel.(lr{i}).(['areas_' suporinfra{h}])(:,k);
+                    if(~all(isnan(tmp)))
+                        topview.generalmodel.(lr{i}).(['areas_' suporinfra{h}])(:,k) = interp1(topview.bregmas(~isnan(tmp)),tmp(~isnan(tmp)),topview.bregmas);
+                    end
+                end
+            end
             for j=1:size(topview.generalmodel.(lr{i}).(['mask_' suporinfra{h}]),2)
                 topview.generalmodel.(lr{i}).(['mask_' suporinfra{h}])(:,j) = smoothLine(topview.generalmodel.(lr{i}).(['mask_' suporinfra{h}])(:,j),5);
             end
             for j=1:size(topview.generalmodel.(lr{i}).(['areas_' suporinfra{h}]),2)
                 topview.generalmodel.(lr{i}).(['areas_' suporinfra{h}])(:,j) = smoothLine(topview.generalmodel.(lr{i}).(['areas_' suporinfra{h}])(:,j),5);
             end
-            topview.generalmodel.(lr{i}).(['mask_' suporinfra{h}]) = inpaint_nans(topview.generalmodel.(lr{i}).(['mask_' suporinfra{h}]),3);
-            topview.generalmodel.(lr{i}).(['areas_' suporinfra{h}]) = inpaint_nans(topview.generalmodel.(lr{i}).(['areas_' suporinfra{h}]),3);
+            
         end
     end
     %create topviews for each mouse based on general mouse model
