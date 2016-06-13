@@ -370,7 +370,7 @@ function drawpercondition(hObject,handles,view)
                     hold off;
                 case 'topview'
                     figure(fig(j));
-                    figsub(j,i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
+                    figsub(j,i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4)+1,i,marg);
                     pcolor_rgb(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol_smooth']));
                     hold on;
                     plot(handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_mean_interpol'])/100,handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_yi'])/100,'k-');
