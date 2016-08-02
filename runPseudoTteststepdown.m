@@ -57,7 +57,7 @@ function topview = runPseudoTteststepdown(topview,condnameA,condnameB,suporinfra
     %initiate progress report
     parfor_progress(N);
     
-    total_tstat = nan(size(xi,1),size(xi,2),N);
+%     total_tstat = nan(size(xi,1),size(xi,2),N);
     
     %run observed condition first
     tstat_observed_ind = zeros(numel(xi),1);
@@ -65,12 +65,12 @@ function topview = runPseudoTteststepdown(topview,condnameA,condnameB,suporinfra
     [tstat_observed_sorted,tstat_observed_ind] = sort(reshape(observed_tstat',[],1));
     parfor_progress;
     
-    total_tstat(:,:,1) = observed_tstat;
+%     total_tstat(:,:,1) = observed_tstat;
     
     %run all other permutations
     for j = 2:N
         [tstat,~,~] = pseudottestcondition(perms(j,:),permscomplement(j,:));
-        total_tstat(:,:,j) = tstat;
+%         total_tstat(:,:,j) = tstat;
         [cmin,cmax] = stepdowntest(tstat);
         Cmax = Cmax + cmax;
         Cmin = Cmin + cmin;
