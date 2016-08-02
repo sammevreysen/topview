@@ -62,10 +62,10 @@ function out = interpolate_condition(topview,condition)
         xi = topview.generalmodel.(out.hemisphere).(['xi_' suporinfra{i}]);
         yi = topview.generalmodel.(out.hemisphere).(['yi_' suporinfra{i}]);
         %      v = nan(size(xs));
-        vnnan = ismember(topview.bregmas,out.bregmas);
         v = out.([suporinfra{i} '_mean']);
+        vnnan = ~isnan(v(:,1));%ismember(topview.bregmas,out.bregmas);
         
-        tmp = concave_griddata(xs(vnnan,:),ys(vnnan,:),v,xi,yi);
+        tmp = concave_griddata(xs(vnnan,:),ys(vnnan,:),v(vnnan,:),xi,yi);
         %      tmp = griddata(xs,ys,v,xi,yi,'linear');
         vinan = any(~isnan(tmp),2);
         tmp([find(vinan,1,'first') find(vinan,1,'last')],:) = NaN;

@@ -354,44 +354,106 @@ function drawpercondition(hObject,handles,view)
         uimenu(cmenu(j), 'Label', 'Enlarge', 'Callback', @enlargesubplot);
         hMenu = uimenu(fig(j),'Label','Save');
         uimenu(hMenu,'Label','Save as PDF...','Callback',@saveFigAsPDF);
+        hMenu2 = uimenu(fig(j),'Label','Areamask');
+        hsubmenu = uimenu(hMenu2,'Label','Add area mask');
+        uimenu(hsubmenu,'Label','None','Callback',@addareamaskoverlay,'Checked','on');
+        files = dir(['visual_areas_mask' filesep '*.mat']);
+        for i=1:size(files,1)
+            uimenu(hsubmenu,'Label',strrep(files(i).name,'.mat',''),'Callback',@addareamaskoverlay);
+        end
+        hsubmenu2 = uimenu(hMenu2,'Label','Change layout...');
+        for i=1:size(files,1)
+            uimenu(hsubmenu2,'Label',strrep(files(i).name,'.mat',''),'Callback',@changeareamaskoverlay);
+        end
     end
-    for i=1:size(handles.topview.conditionnames,1)
-        condition = handles.topview.conditionnames{i};
-        marg = [0.05 0.05];
-        for j=1:length(suporinfra)
-            switch view
-                case 'flatmount'
-                    figure(fig(j));
-                    figsub(j,i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
-                    imagesc(handles.topview.conditions.(condition).segmentsinterpol,handles.topview.conditions.(condition).bregmasinterpol,handles.topview.conditions.(condition).([suporinfra{j} '_mean_interpol']));
-                    hold on;
-                    plot(handles.topview.conditions.(condition).(['arearel' suporinfra{j} '_mean_interpol']),handles.topview.conditions.(condition).bregmasinterpol,'k-');
-                    plot(ones(size(handles.topview.conditions.(condition).bregmas,1),1),handles.topview.conditions.(condition).bregmas,'k>');
-                    hold off;
-                case 'topview'
-                    figure(fig(j));
-                    figsub(j,i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4)+1,i,marg);
-                    pcolor_rgb(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol_smooth']));
-                    hold on;
-                    plot(handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_mean_interpol'])/100,handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_yi'])/100,'k-');
-                    hold off;
+    if 1
+        for i=1:size(handles.topview.conditionnames,1)
+            condition = handles.topview.conditionnames{i};
+            marg = [0.05 0.05];
+            for j=1:length(suporinfra)
+                switch view
+                    case 'flatmount'
+                        figure(fig(j));
+                        figsub(j,i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
+                        imagesc(handles.topview.conditions.(condition).segmentsinterpol,handles.topview.conditions.(condition).bregmasinterpol,handles.topview.conditions.(condition).([suporinfra{j} '_mean_interpol']));
+                        hold on;
+                        plot(handles.topview.conditions.(condition).(['arearel' suporinfra{j} '_mean_interpol']),handles.topview.conditions.(condition).bregmasinterpol,'k-');
+                        plot(ones(size(handles.topview.conditions.(condition).bregmas,1),1),handles.topview.conditions.(condition).bregmas,'k>');
+                        hold off;
+                    case 'topview'
+                        figure(fig(j));
+                        figsub(j,i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
+                        pcolor_rgb(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])/100,-handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol_smooth']));
+                        hold on;
+                        plot(handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_mean_interpol'])/100,-handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_yi'])/100,'k-');
+                        hold off;
+                        axis xy equal tight;
+                end
+                set(figsub(j,i), 'Uicontextmenu',cmenu(j));
+                set(figsub(j,i),'Tag','jet');
+                title([condition ' - ' suporinfra{j}]);
+                xlims(j,i,:) = xlim;
+                ylims(j,i,:) = ylim;
+                clims(j,i,:) = caxis;
             end
-            set(figsub(j,i), 'Uicontextmenu',cmenu(j));
-            set(figsub(j,i),'Tag','jet');
-            title([condition ' - ' suporinfra{j}]);
+            
+        end
+        ylims = reshape(ylims,[],2);
+        xlims = reshape(xlims,[],2);
+        clims = reshape(clims,[],2);
+        set(figsub,'Clim',[0 100]);
+        set(figsub,'Ylim',[min(ylims(:,1)) max(ylims(:,2))]);
+        %     set(figsub,'Xlim',[min(xlims(:,1)) max(xlims(:,2))]);
+        set(figsub,'Xlim',[min(xlims(:,1))*(1 - (sign(min(xlims(:,1)))*0.03)) max(xlims(:,2))*(1 + (sign(min(xlims(:,1)))*0.03))]);
+    elseif 0
+        figure(fig(1));
+        a = 1;
+        for j=1:length(suporinfra)
+            i=2;
+            condition = handles.topview.conditionnames{i};
+            marg = [0.05 0.05];
+            figsub(j,1) = subplot_tight(2,3,a,marg);
+            pcolor_rgb(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])/100,-handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol_smooth']));
+            hold on;
+            plot(handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_mean_interpol'])/100,-handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_yi'])/100,'k-');
+            hold off;
+            axis xy equal tight;
+            title(condition);
             xlims(j,i,:) = xlim;
             ylims(j,i,:) = ylim;
             clims(j,i,:) = caxis;
+            a = a + 1;
+            
+            
+            figsub(j,2) = subplot_tight(2,3,a,marg);
+            axis xy equal tight;
+            a = a + 1;
+            
+            i=1;
+            condition = handles.topview.conditionnames{i};
+            marg = [0.05 0.05];           
+            figsub(j,3) = subplot_tight(2,3,a,marg);
+            pcolor_rgb(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])/100,-handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol_smooth']));
+            hold on;
+            plot(handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_mean_interpol'])/100,-handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_yi'])/100,'k-');
+            hold off;
+            axis xy equal tight;
+            title(condition);
+            xlims(j,i,:) = xlim;
+            ylims(j,i,:) = ylim;
+            clims(j,i,:) = caxis;
+            a = a + 1;
+            
         end
-        
+        ylims = reshape(ylims,[],2);
+        xlims = reshape(xlims,[],2);
+        clims = reshape(clims,[],2);
+        set(figsub,'Clim',[0 100]);
+        set(figsub,'Ylim',[min(ylims(:,1)) max(ylims(:,2))]);
+        %     set(figsub,'Xlim',[min(xlims(:,1)) max(xlims(:,2))]);
+        set(figsub,'Xlim',[min(xlims(:,1))*(1 - (sign(min(xlims(:,1)))*0.03)) max(xlims(:,2))*(1 + (sign(min(xlims(:,1)))*0.03))]);
     end
-    ylims = reshape(ylims,[],2);
-    xlims = reshape(xlims,[],2);
-    clims = reshape(clims,[],2);
-    set(figsub,'Clim',[0 100]);
-    set(figsub,'Ylim',[min(ylims(:,1)) max(ylims(:,2))]);
-%     set(figsub,'Xlim',[min(xlims(:,1)) max(xlims(:,2))]);
-    set(figsub,'Xlim',[min(xlims(:,1))*(1 - (sign(min(xlims(:,1)))*0.03)) max(xlims(:,2))*(1 + (sign(min(xlims(:,1)))*0.03))]);
+        
     set(fig,'Visible','on');
     guidata(hObject,handles);
 
