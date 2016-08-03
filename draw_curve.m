@@ -20,6 +20,7 @@
     You can check further details in the comments.
 %}
 function [xsout,ysout] = draw_curve(h)
+title('Draw a new border');
 hold on;
 userdata.click = 0;
 userdata.range = 21;
