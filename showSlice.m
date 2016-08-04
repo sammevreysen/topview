@@ -44,7 +44,9 @@ function hfigselslice = showSlice(setuptablerow,varargin)
         plot(setuptablerow{5}.midareaxy(:,1),setuptablerow{5}.midareaxy(:,2),'ro');
         plot(setuptablerow{5}.botareaxy(:,1),setuptablerow{5}.botareaxy(:,2),'ro');
         if(isfield(setuptablerow{5},'meanbgcoordinates'))
-            plot(setuptablerow{5}.meanbgcoordinates([1 2 2 1 1],1),setuptablerow{5}.meanbgcoordinates([1 1 2 2 1],2),'g-');
+            for i=1:size(setuptablerow{5}.meanbgcoordinates,3)
+                plot(setuptablerow{5}.meanbgcoordinates([1 2 2 1 1],1,i),setuptablerow{5}.meanbgcoordinates([1 1 2 2 1],2,i),'g-');
+            end
         end
         hold off;
     else
@@ -58,7 +60,11 @@ function hfigselslice = showSlice(setuptablerow,varargin)
         plot(setuptablerow{5}.topareaxy(:,1),setuptablerow{5}.topareaxy(:,2),'ro');
         plot(setuptablerow{5}.midareaxy(:,1),setuptablerow{5}.midareaxy(:,2),'ro');
         plot(setuptablerow{5}.botareaxy(:,1),setuptablerow{5}.botareaxy(:,2),'ro');
-        plot(setuptablerow{5}.meanbgcoordinates([1 2 2 1 1],1),setuptablerow{5}.meanbgcoordinates([1 1 2 2 1],2),'g-');
+        if(isfield(setuptablerow{5},'meanbgcoordinates'))
+            for i=1:size(setuptablerow{5}.meanbgcoordinates,3)
+                plot(setuptablerow{5}.meanbgcoordinates([1 2 2 1 1],1,i),setuptablerow{5}.meanbgcoordinates([1 1 2 2 1],2,i),'g-');
+            end
+        end
         hold off;
     end
     if(isfield(setuptablerow{5},'midlinep'))

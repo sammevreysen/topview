@@ -20,10 +20,12 @@ function out = interpolate_condition(topview,condition)
     %stack and align all animal in matrix (bregmas x segments x
     %animals)
     for i=1:length(suporinfra)
-        out.(suporinfra{i}) = nan(size(out.bregmas,1),size(segments,2),size(micelist,1));
+        out.(suporinfra{i}) = nan(size(out.bregmas,1),size(segments,2),size(micelist,1),topview.noLayers);
         out.(['arearel' suporinfra{i}]) = nan(size(out.bregmas,1),arealborders,size(micelist,1));
         for jjj = 1:size(micelist,1)
-            out.(suporinfra{i})(ismember(out.bregmas,topview.mice.(micelist{jjj}).bregmas),:,jjj) = topview.mice.(micelist{jjj}).(suporinfra{i}).*topview.mice.(micelist{jjj}).(['normalizefactor_' suporinfra{i}]);
+            for kkk=1:topview.noLayers
+                out.(suporinfra{i})(ismember(out.bregmas,topview.mice.(micelist{jjj}).bregmas),:,jjj,kkk) = topview.mice.(micelist{jjj}).(suporinfra{i})(:,:,kkk).*topview.mice.(micelist{jjj}).(['normalizefactor_' suporinfra{i}]);
+            end
             out.(['arearel' suporinfra{i}])(ismember(out.bregmas,topview.mice.(micelist{jjj}).bregmas),:,jjj) = topview.mice.(micelist{jjj}).(['arearel' suporinfra{i}]);
         end
         %interpolate per animal to grid without extrapolation (already done
@@ -50,7 +52,9 @@ function out = interpolate_condition(topview,condition)
         %flatmount
         [x,y] = meshgrid(segments,out.bregmas);
         [xi,yi] = meshgrid(1:0.1:size(x,2),y(1):1:y(end));
-        out.([suporinfra{i} '_mean_interpol']) = interp2(x,y,out.([suporinfra{i} '_mean']),xi,yi,'linear');
+        for jjj=1:topview.noLayers
+            out.([suporinfra{i} '_mean_interpol'])(:,:,jjj) = interp2(x,y,out.([suporinfra{i} '_mean'])(:,:,jjj),xi,yi,'linear');
+        end
         out.segmentsinterpol = xi(1,:);
         out.bregmasinterpol = yi(:,1);
         [xa,ya] = meshgrid(1:topview.arealborders,out.bregmas);
@@ -62,14 +66,17 @@ function out = interpolate_condition(topview,condition)
         xi = topview.generalmodel.(out.hemisphere).(['xi_' suporinfra{i}]);
         yi = topview.generalmodel.(out.hemisphere).(['yi_' suporinfra{i}]);
         %      v = nan(size(xs));
-        v = out.([suporinfra{i} '_mean']);
-        vnnan = ~isnan(v(:,1));%ismember(topview.bregmas,out.bregmas);
-        
-        tmp = concave_griddata(xs(vnnan,:),ys(vnnan,:),v(vnnan,:),xi,yi);
-        %      tmp = griddata(xs,ys,v,xi,yi,'linear');
-        vinan = any(~isnan(tmp),2);
-        tmp([find(vinan,1,'first') find(vinan,1,'last')],:) = NaN;
-        out.(['topview_' suporinfra{i} '_mean_interpol']) = tmp;
+        for jjj=1:topview.noLayers
+            v = out.([suporinfra{i} '_mean'])(:,:,jjj);
+            vnnan = ~isnan(v(:,1));%ismember(topview.bregmas,out.bregmas);
+            
+            tmp = concave_griddata(xs(vnnan,:),ys(vnnan,:),v(vnnan,:),xi,yi);
+            %      tmp = griddata(xs,ys,v,xi,yi,'linear');
+            vinan = any(~isnan(tmp),2);
+            tmp([find(vinan,1,'first') find(vinan,1,'last')],:) = NaN;
+            out.(['topview_' suporinfra{i} '_mean_interpol'])(:,:,jjj) = tmp;
+            out.(['topview_' suporinfra{i} '_mean_interpol_smooth'])(:,:,jjj) = smoothfct(topview,tmp);
+        end
         out.(['topview_' suporinfra{i} '_xi']) = xi;
         out.(['topview_' suporinfra{i} '_yi']) = yi;
         [xa,ya] = meshgrid(1:topview.arealborders,topview.bregmas);
@@ -78,6 +85,5 @@ function out = interpolate_condition(topview,condition)
         out.(['topview_area_' suporinfra{i} '_mean_interpol']) = interp2(xa,ya,va,xai,yai,'linear');
         out.(['topview_area_' suporinfra{i} '_xi']) = xai;
         out.(['topview_area_' suporinfra{i} '_yi']) = yai;
-        out.(['topview_' suporinfra{i} '_mean_interpol_smooth']) = smoothfct(topview,tmp);
     end
 end
