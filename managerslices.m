@@ -60,6 +60,8 @@ if(ischar(varargin{1}))
 else
     handles.setuptable = varargin{1};
     handles.projectname = varargin{2};
+    handles.gridsize = varargin{3};
+    handles.pixpermm = varargin{4};
 end
 if(~isfield(handles.setuptable{1,5},'bregma'))
     handles.setuptable = alignbregmas(handles.setuptable);

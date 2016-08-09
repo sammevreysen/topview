@@ -1,4 +1,4 @@
-function topview = createTopviewFile(setuptable)
+function topview = createTopviewFile(setuptable,gridsize,pixpermm)
 %%%%%%%%%%%%%%%%%%%%%%%%
 % function createTopviewFile creates a structure with data sorted by mice
 % and conditions
@@ -13,8 +13,8 @@ function topview = createTopviewFile(setuptable)
     lr = {'left';'right'};
     suporinfra = {'supra';'infra';'total'};
     toporbot = {'top';'bot';'top'}; %assume total
-    topview.gridsize = 0.1; %0.2 for rat
-    topview.pixpermm = 52.3864;
+    topview.gridsize = gridsize; %0.1; %0.2 for rat
+    topview.pixpermm = pixpermm; %52.3864;
     topview.smoothwindow = topview.gridsize*2; %0.2;
      
     bregmas = cellfun(@(x) num2str(x.bregma),setuptable(:,5),'UniformOutput',false);

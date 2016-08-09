@@ -62,11 +62,13 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
         handles.(varfields{i}) = vars.(varfields{i});
     end    
     
-    if(nargin > 4)
+    if(nargin == 7)
         recreatetopview = varargin{2};
-    else
+    elseif(nargin == 6)
         recreatetopview = false;
     end
+    handles.gridsize = varargin{2};
+    handles.pixpermm = varargin{3};
     
     %savefolder
     handles.pdfsavefolder = ['saved_project' filesep projectname filesep 'pdf' filesep];
@@ -76,7 +78,7 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.aprange = arrayfun(@(x) [num2str(min(cell2mat(cellfun(@(y) y.bregma, handles.setuptable(strcmp(handles.setuptable(:,2),x),5),'UniformOutput',false)))) '-' num2str(max(cell2mat(cellfun(@(y) y.bregma, handles.setuptable(strcmp(handles.setuptable(:,2),x),5),'UniformOutput',false))))],handles.mice,'UniformOutput',false);
         
     if(~isfield(handles,'topview') || recreatetopview)
-        handles.topview = createTopviewFile(handles.setuptable);
+        handles.topview = createTopviewFile(handles.setuptable,handles.gridsize,handles.pixpermm);
         saveProject(handles,'topview');
     else
        if(~isfield(handles.topview,'suporinfra'))
