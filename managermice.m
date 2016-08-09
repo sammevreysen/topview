@@ -67,8 +67,13 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
     else
         recreatetopview = false;
     end
-    handles.gridsize = varargin{2};
-    handles.pixpermm = varargin{3};
+    if(~isfield(handles.topview,'gridsize')||~isfield(handles.topview,'pixpermm'))
+        handles.gridsize = varargin{2};
+        handles.pixpermm = varargin{3};
+    else
+        handles.gridsize = handles.topview.gridsize;
+        handles.pixpermm = handles.topview.pixpermm;
+    end
     
     %savefolder
     handles.pdfsavefolder = ['saved_project' filesep projectname filesep 'pdf' filesep];
@@ -331,7 +336,7 @@ function drawpermouse(hObject,handles,view)
                             plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,-handles.topview.bregmas/100,'k-');
                         end
                         hold off;
-                        axis ij equal tight;
+                        axis xy equal tight;
                         set(gca, 'Uicontextmenu',cmenu(j));
                         set(gca,'Tag','jet');
                         if(strcmp(mouse,handles.topview.normalizetomouse))
@@ -350,7 +355,7 @@ function drawpermouse(hObject,handles,view)
                             end
                             hold off;
                             colormap gray;
-                            axis ij equal tight;
+                            axis xy equal tight;
                             set(gca, 'Uicontextmenu',cmenu(j));
                             set(gca,'Tag','gray');
                         end
@@ -363,7 +368,7 @@ function drawpermouse(hObject,handles,view)
                             plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,-handles.topview.bregmas/100,'k-');
                         end
                         hold off;
-                        axis ij equal tight;
+                        axis xy equal tight;
                     end
                     
 %                     if(all(xi < 0))
