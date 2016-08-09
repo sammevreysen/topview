@@ -313,6 +313,13 @@ function drawpermouse(hObject,handles,view)
 %                     pcolor_rgb(xi/100,-yi/100,interpolprojected);
                     if(handles.topview.noLayers > 1)
                         image(xi(1,:)/100,-yi(:,1)/100,scaleRGB(interpolprojected));
+                        hold on;
+                        if(strcmp(view,'topview'))
+                            plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,-handles.topview.mice.(mouse).bregmas/100,'k-');
+                        else
+                            plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,-handles.topview.bregmas/100,'k-');
+                        end
+                        hold off;
                         axis ij equal tight;
                         set(gca, 'Uicontextmenu',cmenu(j));
                         set(gca,'Tag','jet');
@@ -324,6 +331,13 @@ function drawpermouse(hObject,handles,view)
                         for k=1:handles.topview.noLayers
                             subplot(size(handles.topview.micenames,1),handles.topview.noLayers+1,(i-1)*handles.topview.noLayers+1+k)
                             image(xi(1,:)/100,-yi(:,1)/100,interpolprojected(:,:,k));
+                            hold on;
+                            if(strcmp(view,'topview'))
+                                plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,-handles.topview.mice.(mouse).bregmas/100,'k-');
+                            else
+                                plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,-handles.topview.bregmas/100,'k-');
+                            end
+                            hold off;
                             colormap gray;
                             axis ij equal tight;
                             set(gca, 'Uicontextmenu',cmenu(j));
@@ -331,14 +345,16 @@ function drawpermouse(hObject,handles,view)
                         end
                     else
                         image(xi(1,:)/100,-yi(:,1)/100,interpolprojected);
+                        hold on;
+                        if(strcmp(view,'topview'))
+                            plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,-handles.topview.mice.(mouse).bregmas/100,'k-');
+                        else
+                            plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,-handles.topview.bregmas/100,'k-');
+                        end
+                        hold off;
                         axis ij equal tight;
                     end
-                    hold on;
-                    if(strcmp(view,'topview'))
-                        plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,-handles.topview.mice.(mouse).bregmas/100,'k-');
-                    else
-                        plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,-handles.topview.bregmas/100,'k-');
-                    end
+                    
 %                     if(all(xi < 0))
 %                         ls = 'k<';
 %                     else
