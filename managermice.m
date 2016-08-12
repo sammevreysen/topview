@@ -293,7 +293,7 @@ function drawpermouse(hObject,handles,view)
         for j=1:length(suporinfra)
             figure(fig(j));
             if(handles.topview.noLayers > 1)
-                figsub(j,i) = subplot(size(handles.topview.micenames,1),handles.topview.noLayers+1,(i-1)*handles.topview.noLayers+1);
+                figsub(j,i) = subplot(size(handles.topview.micenames,1),handles.topview.noLayers+1,(i-1)*(handles.topview.noLayers+1)+1);
             else
                 figsub(j,i) = subplot(ceil(size(handles.topview.micenames,1)/4),min(size(handles.topview.micenames,1),4),i);
             end
@@ -345,7 +345,7 @@ function drawpermouse(hObject,handles,view)
                             title([mouse ' - ' suporinfra{j}]);
                         end
                         for k=1:handles.topview.noLayers
-                            subplot(size(handles.topview.micenames,1),handles.topview.noLayers+1,(i-1)*handles.topview.noLayers+1+k)
+                            subplot(size(handles.topview.micenames,1),handles.topview.noLayers+1,(i-1)*(handles.topview.noLayers+1)+1+k)
                             image(xi(1,:)/100,-yi(:,1)/100,interpolprojected(:,:,k));
                             hold on;
                             if(strcmp(view,'topview'))
