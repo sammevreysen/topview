@@ -67,7 +67,7 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
     else
         recreatetopview = false;
     end
-    if(~isfield(handles.topview,'gridsize')||~isfield(handles.topview,'pixpermm'))
+    if(~isfield(handles,'topview')||~isfield(handles.topview,'gridsize')||~isfield(handles.topview,'pixpermm'))
         handles.gridsize = varargin{2};
         handles.pixpermm = varargin{3};
     else
@@ -346,7 +346,7 @@ function drawpermouse(hObject,handles,view)
                         end
                         for k=1:handles.topview.noLayers
                             subplot(size(handles.topview.micenames,1),handles.topview.noLayers+1,(i-1)*(handles.topview.noLayers+1)+1+k)
-                            image(xi(1,:)/100,-yi(:,1)/100,interpolprojected(:,:,k));
+                            imagesc(xi(1,:)/100,-yi(:,1)/100,interpolprojected(:,:,k));
                             hold on;
                             if(strcmp(view,'topview'))
                                 plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,-handles.topview.mice.(mouse).bregmas/100,'k-');
