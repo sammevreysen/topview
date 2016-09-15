@@ -360,7 +360,7 @@ function drawpermouse(hObject,handles,view)
                             set(gca,'Tag','gray');
                         end
                     else
-                        image(xi(1,:)/100,-yi(:,1)/100,interpolprojected);
+                        imagesc(xi(1,:)/100,-yi(:,1)/100,interpolprojected);
                         hold on;
                         if(strcmp(view,'topview'))
                             plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,-handles.topview.mice.(mouse).bregmas/100,'k-');
@@ -437,7 +437,7 @@ function drawpercondition(hObject,handles,view)
                     case 'topview'
                         figure(fig(j));
                         figsub(j,i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
-                        image(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])(1,:)/100,-handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])(:,1)/100,scaleRGB(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol_smooth'])));
+                        imagesc(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])(1,:)/100,-handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])(:,1)/100,scaleRGB(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol_smooth'])));
                         hold on;
                         plot(handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_mean_interpol'])/100,-handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_yi'])/100,'k-');
                         hold off;
