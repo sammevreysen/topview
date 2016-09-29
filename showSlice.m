@@ -59,6 +59,10 @@ function hfigselslice = showSlice(setuptablerow,varargin)
         plot(setuptablerow{5}.midareaxy(:,1),setuptablerow{5}.midareaxy(:,2),'ro');
         plot(setuptablerow{5}.botareaxy(:,1),setuptablerow{5}.botareaxy(:,2),'ro');
         plot(setuptablerow{5}.meanbgcoordinates([1 2 2 1 1],1),setuptablerow{5}.meanbgcoordinates([1 1 2 2 1],2),'g-');
+        if(isfield(setuptablerow{6},'topcoxy'))
+            plot([setuptablerow{6}.topcoxy(:,1)'; setuptablerow{6}.midcoxy(:,1)'],[setuptablerow{6}.topcoxy(:,2)'; setuptablerow{6}.midcoxy(:,2)'],'b-');
+            plot([setuptablerow{6}.midcoxy(:,1)'; setuptablerow{6}.botcoxy(:,1)'],[setuptablerow{6}.midcoxy(:,2)'; setuptablerow{6}.botcoxy(:,2)'],'c-');
+        end
         hold off;
     end
     if(isfield(setuptablerow{5},'midlinep'))
