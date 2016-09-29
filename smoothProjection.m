@@ -92,8 +92,23 @@ function newprojection = smoothProjection(projection,coxy,p)
     
     %interpolate NaN values
     if(any(isnan(newprojection)))
-        newprojection = inpaint_nans(newprojection,3);
 %         plot(newprojection,repmat(((1:size(projection,1)))',1,size(projection,2)),'gs');
+        outsidenans = false(size(newprojection,1),1);
+        a = find(~isnan(newprojection(:,1)),1,'first');
+        if(a>1)
+            outsidenans(1:a-1) = true;
+        end
+        b = find(~isnan(newprojection(:,1)),1,'last');
+        if(b<length(outsidenans))
+            outsidenans(b+1:end) = true;
+        end
+        for i=1:size(newprojection,2)
+            smoothl = smoothLine(projection(:,i),5);
+            newprojection(outsidenans,i) = smoothl(outsidenans);
+        end
+        if(any(isnan(newprojection)))
+            newprojection = inpaint_nans(newprojection,3);
+        end
     end
     
     
