@@ -70,10 +70,6 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
     
     %savefolder
     handles.pdfsavefolder = ['saved_project' filesep projectname filesep 'pdf' filesep];
-    
-    handles.mice = unique(handles.setuptable(:,2));
-    handles.conditions = arrayfun(@(x) cell2mat(unique(handles.setuptable(strcmp(handles.setuptable(:,2),x),1))),handles.mice,'UniformOutput',false);
-    handles.aprange = arrayfun(@(x) [num2str(min(cell2mat(cellfun(@(y) y.bregma, handles.setuptable(strcmp(handles.setuptable(:,2),x),5),'UniformOutput',false)))) '-' num2str(max(cell2mat(cellfun(@(y) y.bregma, handles.setuptable(strcmp(handles.setuptable(:,2),x),5),'UniformOutput',false))))],handles.mice,'UniformOutput',false);
         
     if(~isfield(handles,'topview') || recreatetopview)
         handles.topview = createTopviewFile(handles.setuptable);
@@ -82,6 +78,18 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
        if(~isfield(handles.topview,'suporinfra'))
            handles.topview.suporinfra = {'supra';'infra';'total'};
        end
+    end
+    
+    handles.mice = handles.topview.micenames;
+    handles.conditions = cell(size(handles.mice));
+    handles.aprange = cell(size(handles.mice));
+    for i=1:size(handles.mice)
+        try
+            handles.conditions(i) = handles.topview.mice.(handles.mice{i}).condition;
+        catch
+            handles.conditions(i) = handles.setuptable(find(strcmp(handles.setuptable(:,2),handles.mice{i}),1,'first'),1);
+        end
+        handles.aprange{i} = [num2str(min(handles.topview.mice.(handles.mice{i}).bregmas)) '-' num2str(max(handles.topview.mice.(handles.mice{i}).bregmas))];
     end
         
     normalisation = arrayfun(@(x) isfield(handles.topview.mice.(x{:}),'normfactor_supra'),handles.mice,'UniformOutput',false);

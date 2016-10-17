@@ -39,6 +39,7 @@ function topview = createTopviewFile(setuptable)
     for i=1:size(topview.micenames,1)
         mouse = topview.micenames{i};
         try
+            topview.mice.(mouse).condition = setuptable(find(strcmp(setuptable(:,2),mouse),1,'first'),1);
             topview.mice.(mouse).hemisphere = lr{strcmp(mouse(end-2:end),'_RH')+1};
             topview.mice.(mouse).bregmas = cell2mat(cellfun(@(x) x.bregma,setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false));
             topview.mice.(mouse).segments = cell2mat(cellfun(@(x) x.bregma,setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false));
