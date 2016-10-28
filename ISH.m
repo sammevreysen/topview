@@ -294,7 +294,7 @@ function borders = setBordersSlice(filename,path, handles)
     
     %Top border
     title('Draw the top border of the cortex');
-    [topx,topy] = draw_curve(handles.hfigselslice); %selectpoints(); 
+    [topx,topy] = draw_curve(handles.hfigselslice,handles.pixpermm); %selectpoints(); 
 %     tmp = sortrows([topx topy]);
 %     topx = tmp(:,1);
 %     topy = tmp(:,2);
@@ -305,7 +305,7 @@ function borders = setBordersSlice(filename,path, handles)
 
     %supra-infra border
     title('Draw the supra-infragranular border of the cortex');
-    [midx,midy] = draw_curve(handles.hfigselslice); %selectpoints();
+    [midx,midy] = draw_curve(handles.hfigselslice,handles.pixpermm); %selectpoints();
 %     tmp = sortrows([midx,midy]);
 %     midx = tmp(:,1);
 %     midy = tmp(:,2);
@@ -316,7 +316,7 @@ function borders = setBordersSlice(filename,path, handles)
     
     %bottom border
     title('Draw the bottom border of the cortex');
-    [botx,boty] = draw_curve(handles.hfigselslice); %selectpoints();
+    [botx,boty] = draw_curve(handles.hfigselslice,handles.pixpermm); %selectpoints();
 %     tmp = sortrows([botx,boty]);
 %     botx = tmp(:,1);
 %     boty = tmp(:,2);
