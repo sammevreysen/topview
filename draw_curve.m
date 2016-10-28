@@ -19,7 +19,7 @@
 
     You can check further details in the comments.
 %}
-function [xsout,ysout] = draw_curve(h)
+function [xsout,ysout] = draw_curve(h,pixpermm)
 hold on;
 userdata.click = 0;
 userdata.range = 21;
@@ -36,16 +36,21 @@ xs = userdata.xs;
 ys = userdata.ys;
 xsout = [];
 ysout = [];
-%interpolate with spline
-[xs,ia,ic] = unique(xs);
-ys = ys(ia);
-for i=1:size(xs,1)-1
-   xis = xs(i):(xs(i+1)-xs(i))/50:xs(i+1);
-   yis = interp1([xs(i) xs(i+1)],[ys(i) ys(i+1)],xis);
-   xsout = [xsout;xis'];
-   ysout = [ysout;yis'];
-end
-set(userdata.hsmooth,'XData',xsout,'YData',ysout);
+% %interpolate with spline
+% [xs,ia,ic] = unique(xs);
+% ys = ys(ia);
+% for i=1:size(xs,1)-1
+%    xis = xs(i):(xs(i+1)-xs(i))/50:xs(i+1);
+%    yis = interp1([xs(i) xs(i+1)],[ys(i) ys(i+1)],xis);
+%    xsout = [xsout;xis'];
+%    ysout = [ysout;yis'];
+% end
+
+%interpolation at 5µm resolution
+xys = interparc(ceil(sum(sqrt(sum(diff([xs ys],1,1).^2,2)))/pixpermm/0.005),xs,ys);
+xsout = xys(:,1);
+ysout = xys(:,2);
+set(userdata.hsmooth,'XData',xys(:,1),'YData',xys(:,2));
 end
 
 function keyPress(object, event)

@@ -1,16 +1,16 @@
 function [areax, areay] = setarealborders(x,y,n)
-    xy = unique([x y],'rows');
+%     xy = unique([x y],'rows');
 
     hold on;
     h = plot(x(1),y(1),'rd');
     userdata.h = h;
-    userdata.x = xy(:,1);
-    userdata.y = xy(:,2);
+    userdata.x = x;%y(:,1);
+    userdata.y = y;%y(:,2);
     
     userdata.list = {};
     userdata.n = n;
     %userdata.dt = delaunay(x,y);
-    userdata.dt = DelaunayTri(x,y);
+    userdata.dt = delaunayTriangulation(x,y);
     set(gcf, 'UserData',userdata);
     set(gcf, 'WindowButtonMotionFcn', @mouseMove);
     set(gcf, 'WindowButtonDownFcn', @mouseClick);
@@ -26,12 +26,12 @@ function [areax, areay] = setarealborders(x,y,n)
 function mouseMove (object, eventdata)
 userdata = get(gcf,'UserData');
 C = get (gca, 'CurrentPoint');
-if(C(1,1) > min(userdata.x) && C(1,1) < max(userdata.x) && C(1,2) > min(userdata.y) && C(1,2) < max(userdata.y))
+% if(C(1,1) > min(userdata.x) && C(1,1) < max(userdata.x) && C(1,2) > min(userdata.y) && C(1,2) < max(userdata.y))
     %pid = dsearch(userdata.x,userdata.y,userdata.dt,C(1,1),C(1,2));
-    [pid,d] = nearestNeighbor(userdata.dt,C(1,1),C(1,2));
+    pid = nearestNeighbor(userdata.dt,C(1,1),C(1,2));
     
     set(userdata.h,'XData',userdata.x(pid),'YData',userdata.y(pid));
-end
+% end
 
 function mouseClick(object, eventdata)
     userdata = get(gcf,'UserData');    
