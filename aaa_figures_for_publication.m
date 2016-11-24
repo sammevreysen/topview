@@ -1,8 +1,8 @@
 % save fig for publication
-name = 'Figure8';
+name = 'Figure8b';
 path = '\\bio-srv-df002\DFN\SammeV\Documents\Doctoraat\Publicaties\ISH analysis technical paper\Figures\';
-width = 17.4; %cm
-height = 12; %17.4;
+width = 8.4; %cm
+height = 6; %17.4;
 set(gcf,'Units','centimeters')
 set(gcf,'Position',[1 1 width height]);
 % set(gca,'Units','normalized');
@@ -76,7 +76,7 @@ for i=[5 4 7 8 9]
 end
 %%
 a = 1;
-for i=[5 4 7 8 9]
+for i=[9 5 4 7 8]
     for j=1:size(topview.generalmodel.left.areas_total,2)-1
         areasmean(a,j) = mean(areas(group2(:,2)==j & group2(:,1)==i));
         areasste(a,j) = std(areas(group2(:,2)==j & group2(:,1)==i))/sqrt(sum(group2(:,2)==j & group2(:,1)==i));
@@ -102,7 +102,7 @@ for i = 1:numbars
       errorbar(x, data(:,i), zeros(size(ste(:,i))), ste(:,i), 'k', 'linestyle', 'none');
 end
 set(gca,'XTickLabels',[{'Total'} areanames]);
-legend(conditions([5 4 7 8 9]),'Location','northeastoutside');
+legend(strrep(strrep(strrep(conditions([9 5 4 7 8]),'_',' '),'W','w'),'D','d'),'Location','northeast');
 ylabel('Relative zif expression');
 box off;
 
