@@ -374,6 +374,13 @@ function drawpermouse(hObject,handles,view)
                         end
                         hold off;
                         axis xy equal tight;
+                        set(gca, 'Uicontextmenu',cmenu(j));
+                        set(gca,'Tag','jet');
+                        if(strcmp(mouse,handles.topview.normalizetomouse))
+                            title([mouse ' - ' suporinfra{j} ' (*)']);
+                        else
+                            title([mouse ' - ' suporinfra{j}]);
+                        end
                     end
                     
 %                     if(all(xi < 0))
