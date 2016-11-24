@@ -23,7 +23,7 @@ function varargout = ISH(varargin)
 
 % Edit the above text to modify the response to help ISH
 
-% Last Modified by GUIDE v2.5 14-Apr-2016 11:00:43
+% Last Modified by GUIDE v2.5 09-Aug-2016 15:12:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -93,8 +93,18 @@ for i=1:size(areassplit,2)-1
 end
 set(handles.popup_pivot,'String',areas_pivot);
 
+%no of layers
+handles.noLayers = 3;
+
+%color of signal: white or black
+handles.signal = 'White';
+
 %segments
 handles.rastersegments = str2double(get(handles.edit_segments,'String'));
+
+%gridsize and pixels per mm
+handles.gridsize = str2double(get(handles.txt_gridsize,'String'));
+handles.pixpermm = str2double(get(handles.txt_pxpermm,'String'));
 
 %graph clear
 axis off;
@@ -274,16 +284,17 @@ function borders = setBordersSlice(filename,path, handles)
     end
     img = imread([char(path) char(filename)]);
     if(size(img,3) > 1)
-        imshow(img(:,:,1));
+        I = imshow(img(:,:,1));
     else
-        imshow(img);
+        I = imshow(img);
     end
+    handles.noLayers = size(img,3);
     hold on;
     xlabel(char(filename));
     
     %Top border
     title('Draw the top border of the cortex');
-    [topx,topy] = draw_curve(handles.hfigselslice); %selectpoints(); 
+    [topx,topy] = draw_curve(handles.hfigselslice,handles.pixpermm); %selectpoints(); 
 %     tmp = sortrows([topx topy]);
 %     topx = tmp(:,1);
 %     topy = tmp(:,2);
@@ -294,7 +305,7 @@ function borders = setBordersSlice(filename,path, handles)
 
     %supra-infra border
     title('Draw the supra-infragranular border of the cortex');
-    [midx,midy] = draw_curve(handles.hfigselslice); %selectpoints();
+    [midx,midy] = draw_curve(handles.hfigselslice,handles.pixpermm); %selectpoints();
 %     tmp = sortrows([midx,midy]);
 %     midx = tmp(:,1);
 %     midy = tmp(:,2);
@@ -305,7 +316,7 @@ function borders = setBordersSlice(filename,path, handles)
     
     %bottom border
     title('Draw the bottom border of the cortex');
-    [botx,boty] = draw_curve(handles.hfigselslice); %selectpoints();
+    [botx,boty] = draw_curve(handles.hfigselslice,handles.pixpermm); %selectpoints();
 %     tmp = sortrows([botx,boty]);
 %     botx = tmp(:,1);
 %     boty = tmp(:,2);
@@ -353,13 +364,16 @@ function borders = setBordersSlice(filename,path, handles)
     %Interactive normalization actions
     
     %background square
-    title('Select 2 points to form a square to calculate the background');
-    [bgx,bgy]=selectpoints(2);
-    segmentmask = roipoly(img,[bgx(1) bgx(1) bgx(2) bgx(2)],[bgy(1) bgy(2) bgy(2) bgy(1)]);
-    plot([bgx(1) bgx(1) bgx(2) bgx(2) bgx(1)],[bgy(1) bgy(2) bgy(2) bgy(1) bgy(1)],'m:');
-    %calculate mean grayvalue of segment
-    borders.meanbg = mean(mean(img(segmentmask)));
-    borders.meanbgcoordinates = [bgx bgy];
+   	for i=1:size(img,3)
+        set(I,'CData',img(:,:,i))
+        title(sprintf('Select 2 points to form a square to calculate the background for layer %d',i));
+        [bgx,bgy]=selectpoints(2);
+        segmentmask = roipoly(img,[bgx(1) bgx(1) bgx(2) bgx(2)],[bgy(1) bgy(2) bgy(2) bgy(1)]);
+        plot([bgx(1) bgx(1) bgx(2) bgx(2) bgx(1)],[bgy(1) bgy(2) bgy(2) bgy(1) bgy(1)],'m:');
+        %calculate mean grayvalue of segment
+        borders.meanbg(i,1) = mean(mean(img(segmentmask)));
+        borders.meanbgcoordinates(:,:,i) = [bgx bgy];
+    end
      
     hold off;
     
@@ -700,47 +714,56 @@ function handles = calc_OD(handles)
             plot(handles.setuptable{i,5}.topareaxy(:,1),handles.setuptable{i,5}.topareaxy(:,2),'ro');
             plot(handles.setuptable{i,5}.botareaxy(:,1),handles.setuptable{i,5}.botareaxy(:,2),'go');
         end
-        %calc OD supra
-        for j=1:size(topcox,1)-1
-            if(~isnan(topcox(j)) && ~isnan(midtcox(j)) && ~isnan(topcox(j+1)) && ~isnan(midtcox(j+1)))
-                if(handles.showraster == i)
-                    plot([topcox(j) topcox(j+1) midtcox(j+1) midtcox(j) topcox(j)],[topcoy(j) topcoy(j+1) midtcoy(j+1) midtcoy(j) topcoy(j)],'w-');
-                    
+        for k=1:size(img,3)
+            imgsel = img(:,:,k);
+            %calc OD supra
+            for j=1:size(topcox,1)-1
+                if(~isnan(topcox(j)) && ~isnan(midtcox(j)) && ~isnan(topcox(j+1)) && ~isnan(midtcox(j+1)))
+                    if(handles.showraster == i)
+                        plot([topcox(j) topcox(j+1) midtcox(j+1) midtcox(j) topcox(j)],[topcoy(j) topcoy(j+1) midtcoy(j+1) midtcoy(j) topcoy(j)],'w-');
+
+                    end
+                    segmentmask = roipoly(imgsel,[topcox(j) topcox(j+1) midtcox(j+1) midtcox(j)],[topcoy(j) topcoy(j+1) midtcoy(j+1) midtcoy(j)]);
+                    handles.setuptable{i,6}.meansupra_raw(k,j) = mean(mean(imgsel(segmentmask)));
+                else
+                    handles.setuptable{i,6}.meansupra_raw(k,j) = NaN;
                 end
-                segmentmask = roipoly(img,[topcox(j) topcox(j+1) midtcox(j+1) midtcox(j)],[topcoy(j) topcoy(j+1) midtcoy(j+1) midtcoy(j)]);
-                handles.setuptable{i,6}.meansupra_raw(j) = mean(mean(img(segmentmask)));
-            else
-                handles.setuptable{i,6}.meansupra_raw(j) = NaN;
             end
+            %calc OD infra
+            for j=1:size(botcox,1)-1
+                if(~isnan(botcox(j)) && ~isnan(midbcox(j)) && ~isnan(botcox(j+1)) && ~isnan(midbcox(j+1)))
+                    if(handles.showraster == i)
+                        plot([midbcox(j) midbcox(j+1) botcox(j+1) botcox(j) midbcox(j)],[midbcoy(j) midbcoy(j+1) botcoy(j+1) botcoy(j) midbcoy(j)],'w-');
+                    end
+                    segmentmask = roipoly(imgsel,[midbcox(j) midbcox(j+1) botcox(j+1) botcox(j)],[midbcoy(j) midbcoy(j+1) botcoy(j+1) botcoy(j)]);
+                    handles.setuptable{i,6}.meaninfra_raw(k,j) = mean(mean(imgsel(segmentmask)));
+                else
+                    handles.setuptable{i,6}.meaninfra_raw(k,j) = NaN;
+                end
+            end       
+            %calc OD total
+            for j=1:size(botcox,1)-1
+                if(~isnan(botcox(j)) && ~isnan(topcox(j)) && ~isnan(botcox(j+1)) && ~isnan(topcox(j+1)))
+
+                    segmentmask = roipoly(imgsel,[topcox(j) topcox(j+1) botcox(j+1) botcox(j)],[topcoy(j) topcoy(j+1) botcoy(j+1) botcoy(j)]);
+                    handles.setuptable{i,6}.meantotal_raw(k,j) = mean(mean(imgsel(segmentmask)));
+                else
+                    handles.setuptable{i,6}.meantotal_raw(k,j) = NaN;
+                end
+            end  
         end
-        %calc OD infra
-        for j=1:size(botcox,1)-1
-            if(~isnan(botcox(j)) && ~isnan(midbcox(j)) && ~isnan(botcox(j+1)) && ~isnan(midbcox(j+1)))
-                if(handles.showraster == i)
-                    plot([midbcox(j) midbcox(j+1) botcox(j+1) botcox(j) midbcox(j)],[midbcoy(j) midbcoy(j+1) botcoy(j+1) botcoy(j) midbcoy(j)],'w-');
-                end
-                segmentmask = roipoly(img,[midbcox(j) midbcox(j+1) botcox(j+1) botcox(j)],[midbcoy(j) midbcoy(j+1) botcoy(j+1) botcoy(j)]);
-                handles.setuptable{i,6}.meaninfra_raw(j) = mean(mean(img(segmentmask)));
-            else
-                handles.setuptable{i,6}.meaninfra_raw(j) = NaN;
-            end
-        end       
-        %calc OD total
-        for j=1:size(botcox,1)-1
-            if(~isnan(botcox(j)) && ~isnan(topcox(j)) && ~isnan(botcox(j+1)) && ~isnan(topcox(j+1)))
-                
-                segmentmask = roipoly(img,[topcox(j) topcox(j+1) botcox(j+1) botcox(j)],[topcoy(j) topcoy(j+1) botcoy(j+1) botcoy(j)]);
-                handles.setuptable{i,6}.meantotal_raw(j) = mean(mean(img(segmentmask)));
-            else
-                handles.setuptable{i,6}.meantotal_raw(j) = NaN;
-            end
-        end  
         
         %normalize against background in thalamus (%%TODO change here for
         %use with c-13 ladder
-        handles.setuptable{i,6}.meansupra = (1-(handles.setuptable{i,6}.meansupra_raw./handles.setuptable{i,5}.meanbg))*100;
-        handles.setuptable{i,6}.meaninfra = (1-(handles.setuptable{i,6}.meaninfra_raw./handles.setuptable{i,5}.meanbg))*100;
-        handles.setuptable{i,6}.meantotal = (1-(handles.setuptable{i,6}.meantotal_raw./handles.setuptable{i,5}.meanbg))*100;
+        if(strcmp(handles.signal,'White'))
+            handles.setuptable{i,6}.meansupra = (1-((255-handles.setuptable{i,6}.meansupra_raw)./(255-repmat(handles.setuptable{i,5}.meanbg,1,size(handles.setuptable{i,6}.meansupra_raw,2)))))*100;
+            handles.setuptable{i,6}.meaninfra = (1-((255-handles.setuptable{i,6}.meaninfra_raw)./(255-repmat(handles.setuptable{i,5}.meanbg,1,size(handles.setuptable{i,6}.meansupra_raw,2)))))*100;
+            handles.setuptable{i,6}.meantotal = (1-((255-handles.setuptable{i,6}.meantotal_raw)./(255-repmat(handles.setuptable{i,5}.meanbg,1,size(handles.setuptable{i,6}.meansupra_raw,2)))))*100;
+        else
+            handles.setuptable{i,6}.meansupra = (1-(handles.setuptable{i,6}.meansupra_raw./repmat(handles.setuptable{i,5}.meanbg,1,size(handles.setuptable{i,6}.meansupra_raw,2))))*100;
+            handles.setuptable{i,6}.meaninfra = (1-(handles.setuptable{i,6}.meaninfra_raw./repmat(handles.setuptable{i,5}.meanbg,1,size(handles.setuptable{i,6}.meansupra_raw,2))))*100;
+            handles.setuptable{i,6}.meantotal = (1-(handles.setuptable{i,6}.meantotal_raw./repmat(handles.setuptable{i,5}.meanbg,1,size(handles.setuptable{i,6}.meansupra_raw,2))))*100;
+        end
     end
     
 function handles = extractdata(handles)
@@ -770,7 +793,7 @@ function handles = extractdata(handles)
         fprintf(flogid,'Calculating OD skipped');
         fprintf('Calculating OD skipped');
     end
-    
+if 0 
     %start resultstruct
     projectresults.name = handles.savename;
     projectresults.amountslices = size(handles.setuptable,1);
@@ -811,7 +834,7 @@ function handles = extractdata(handles)
         
         regions_areas = struct([]);
         regions_regions = struct([]);
-        for j=1:size(setuptable,1)
+         for j=1:size(setuptable,1)
             if(strcmp(setuptable(j,2),mice(i)))
                 slicesxsegments_supra = [slicesxsegments_supra; setuptable{j,6}.meansupra];
                 slicesxsegments_infra = [slicesxsegments_infra; setuptable{j,6}.meaninfra];
@@ -820,7 +843,7 @@ function handles = extractdata(handles)
                 if(pivot == 0)
                     toparearel = [toparearel; setuptable{j,6}.toparealrel];
                     botarearel = [botarearel; setuptable{j,6}.botarealrel];
-                        
+
                 else
                     toparearel = [toparearel; setuptable{j,6}.(['toppiv' num2str(pivot) 'arealrel'])];
                     botarearel = [botarearel; setuptable{j,6}.(['botpiv' num2str(pivot) 'arealrel'])];
@@ -830,20 +853,20 @@ function handles = extractdata(handles)
                    tempval_supra = setuptable{j,6}.meansupra(:,1:size(setuptable{j,6}.meansupra,2) >= toparearel(end,k) & 1:size(setuptable{j,6}.meansupra,2) < toparearel(end,k+1));
                    tempval_infra = setuptable{j,6}.meaninfra(:,1:size(setuptable{j,6}.meaninfra,2) >= botarearel(end,k) & 1:size(setuptable{j,6}.meaninfra,2) < botarearel(end,k+1));
                    if(~isfield(regions_areas,areas{k}))
-                       regions_areas(1).(areas{k}).segments_supra = tempval_supra';
-                       regions_areas(1).(areas{k}).segments_supra_mean = nanmean(tempval_supra);
-                       regions_areas(1).(areas{k}).segments_infra = tempval_infra';
-                       regions_areas(1).(areas{k}).segments_infra_mean = nanmean(tempval_infra);
+                       regions_areas(1).(areas{k}).segments_supra = permute(tempval_supra,[3,2,1]);
+                       regions_areas(1).(areas{k}).segments_supra_mean = nanmean(tempval_supra,2)';
+                       regions_areas(1).(areas{k}).segments_infra = permute(tempval_infra,[3,2,1]);
+                       regions_areas(1).(areas{k}).segments_infra_mean = nanmean(tempval_infra,2)';
                    else
-                       regions_areas.(areas{k}).segments_supra = [regions_areas.(areas{k}).segments_supra; tempval_supra'];
-                       regions_areas.(areas{k}).segments_infra = [regions_areas.(areas{k}).segments_infra; tempval_infra'];
-                       regions_areas.(areas{k}).segments_supra_mean = [regions_areas.(areas{k}).segments_supra_mean; nanmean(tempval_supra)];
-                       regions_areas.(areas{k}).segments_infra_mean = [regions_areas.(areas{k}).segments_infra_mean; nanmean(tempval_infra)];
+                       regions_areas.(areas{k}).segments_supra = cat(1,regions_areas.(areas{k}).segments_supra, permute(tempval_supra,[3,2,1]));
+                       regions_areas.(areas{k}).segments_infra = cat(1,regions_areas.(areas{k}).segments_infra, permute(tempval_infra,[3,2,1]));
+                       regions_areas.(areas{k}).segments_supra_mean = [regions_areas.(areas{k}).segments_supra_mean; nanmean(tempval_supra,2)'];
+                       regions_areas.(areas{k}).segments_infra_mean = [regions_areas.(areas{k}).segments_infra_mean; nanmean(tempval_infra,2)'];
                    end
                 end
                 for l=1:size(areas,2)
-                    regions_areas(1).(areas{l}).segments_supra_mean_mean = nanmean(regions_areas.(areas{l}).segments_supra);
-                    regions_areas(1).(areas{l}).segments_infra_mean_mean = nanmean(regions_areas.(areas{l}).segments_infra);
+                    regions_areas(1).(areas{l}).segments_supra_mean_mean = nanmean(regions_areas.(areas{l}).segments_supra,1);
+                    regions_areas(1).(areas{l}).segments_infra_mean_mean = nanmean(regions_areas.(areas{l}).segments_infra,1);
                 end
             end
         end
@@ -997,7 +1020,7 @@ function handles = extractdata(handles)
     projectresults.allbotarearel = allbotarearel;
     
     fclose(flogid);
-    
+end
 %     fprintf('Saving data in Excel file...\n');
 %     if(strfind(system_dependent('getos'),'Microsoft Windows'))
 %         exportToExcel(projectresults,[pwd '\' handles.savepath handles.savename '_results.xlsx']);
@@ -1007,19 +1030,20 @@ function handles = extractdata(handles)
 %     
     fprintf('Saving data in Matlab file...\n');
     %save setuptable and resultfile
+    setuptable = handles.setuptable;
     if(isfield(handles,'ROI'))
         ROI = handles.ROI;
         save([handles.savepath char(handles.savename) '.mat'],'setuptable','ROI');
     else
         save([handles.savepath char(handles.savename) '.mat'],'setuptable');
     end
-    save([handles.savepath handles.savename '_results.mat'],'projectresults');
+%     save([handles.savepath handles.savename '_results.mat'],'projectresults');
     fprintf('Project saved as %s\n',handles.savename);
-    fprintf('Results saved as %s\n',[handles.savename '_results.mat']);
+%     fprintf('Results saved as %s\n',[handles.savename '_results.mat']);
     %store handles
     handles.setuptable = setuptable;
-    handles.projectresults = projectresults;
-    fprintf('Data sorted\n');
+%     handles.projectresults = projectresults;
+%     fprintf('Data sorted\n');
     
 function handles = runstatistics(handles)
     setuptable = handles.setuptable;
@@ -1652,9 +1676,9 @@ function handles = runstatistics(handles)
     %save setuptable and resultfile
     if(isfield(handles,'ROI'))
         ROI = handles.ROI;
-        save([handles.savepath char(handles.savename) '.mat'],'setuptable','ROI');
+        save([handles.savepath char(handles.savename) '.mat'],'handles.setuptable','ROI');
     else
-        save([handles.savepath char(handles.savename) '.mat'],'setuptable');
+        save([handles.savepath char(handles.savename) '.mat'],'handles.setuptable');
     end
     save([handles.savepath handles.savename '_results.mat'],'projectresults');
     fprintf('Project saved as %s\n',handles.savename);
@@ -2326,8 +2350,10 @@ function menu_reregBackground_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_reregBackground (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    if(~isfield(handles,'hfigselslice'))
+    if(~isfield(handles,'hfigselslice') | ~ishandle(handles.hfigselslice))
         handles.hfigselslice = figure();
+    else
+        figure(handles.hfigselslice);
     end
     setuptable = handles.setuptable;
     slices = get(handles.list_slices,'String');
@@ -2360,9 +2386,9 @@ function menu_reregBackground_Callback(hObject, eventdata, handles)
             botcoy = handles.setuptable{imgid,6}.(['botpiv' num2str(pivot) 'coxy'])(:,2);
         end
         
-        handles.hfigselslice = figure(handles.hfigselslice);
+        
         img = imread([setuptable{imgid,4} setuptable{imgid,3}]);
-        imshow(img);
+        I = imshow(img);
         hold on;
         plot([topcox'; midtcox'],[topcoy'; midtcoy'],'b-');
         plot([midbcox'; botcox'],[midbcoy'; botcoy'],'c-');
@@ -2373,7 +2399,7 @@ function menu_reregBackground_Callback(hObject, eventdata, handles)
     else
         handles.hfigselslice = figure(handles.hfigselslice);
         img = imread([setuptable{imgid,4} setuptable{imgid,3}]);
-        imshow(img);
+        I = imshow(img);
         hold on;
         plot(setuptable{imgid,5}.topx(1:100:end),setuptable{imgid,5}.topy(1:100:end),'b-');
         plot(setuptable{imgid,5}.midx(1:100:end),setuptable{imgid,5}.midy(1:100:end),'b-');
@@ -2384,13 +2410,20 @@ function menu_reregBackground_Callback(hObject, eventdata, handles)
         hold off;
     end
     hold on;
-    title('Select 2 points to form a square to calculate the background');
-    [bgx,bgy]=selectpoints(2);
-    segmentmask = roipoly(img,[bgx(1) bgx(1) bgx(2) bgx(2)],[bgy(1) bgy(2) bgy(2) bgy(1)]);
-    plot([bgx(1) bgx(1) bgx(2) bgx(2) bgx(1)],[bgy(1) bgy(2) bgy(2) bgy(1) bgy(1)],'m:');
-    %calculate mean grayvalue of segment
-    handles.setuptable{imgid,5}.meanbg = mean(mean(img(segmentmask)));
-    handles.setuptable{imgid,5}.meanbgcoordinates = [bgx bgy];
+    handles.setuptable{imgid,5}.meanbg = [];
+    handles.setuptable{imgid,5}.meanbgcoordinates = [];
+    for i=1:handles.noLayers
+        imgsel = img(:,:,i);
+        set(I,'CData',imgsel);
+        colormap gray;
+        title(sprintf('Select 2 points to form a square to calculate the background for layer %d',i));
+        [bgx,bgy]=selectpoints(2);
+        segmentmask = roipoly(imgsel,[bgx(1) bgx(1) bgx(2) bgx(2)],[bgy(1) bgy(2) bgy(2) bgy(1)]);
+        plot([bgx(1) bgx(1) bgx(2) bgx(2) bgx(1)],[bgy(1) bgy(2) bgy(2) bgy(1) bgy(1)],'m:');
+        %calculate mean grayvalue of segment
+        handles.setuptable{imgid,5}.meanbg(i,:) = mean(mean(imgsel(segmentmask)));
+        handles.setuptable{imgid,5}.meanbgcoordinates(:,:,i) = [bgx bgy];
+    end
     hold off;
     close(handles.hfigselslice);
     guidata(hObject,handles);
@@ -2625,7 +2658,7 @@ function menu_topviewGUI_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_topviewGUI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.setuptable = managerslices(handles.setuptable,handles.savename);
+    handles.setuptable = managerslices(handles.setuptable,handles.savename,handles.gridsize,handles.pixpermm);
     guidata(hObject,handles);
     
     
@@ -2687,3 +2720,100 @@ function menu_resetbregma_Callback(hObject, eventdata, handles)
     end
     handles.setuptable = setuptable;
     guidata(hObject,handles);
+
+
+
+function txt_nolayers_Callback(hObject, eventdata, handles)
+% hObject    handle to txt_nolayers (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of txt_nolayers as text
+%        str2double(get(hObject,'String')) returns contents of txt_nolayers as a double
+    handles.noLayers = str2num(get(hObject,'String'));
+    guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function txt_nolayers_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to txt_nolayers (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popup_signal.
+function popup_signal_Callback(hObject, eventdata, handles)
+% hObject    handle to popup_signal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popup_signal contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popup_signal
+    contents = cellstr(get(hObject,'String'));
+    handles.signal = contents{get(hObject,'Value')};
+    guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function popup_signal_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popup_signal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function txt_gridsize_Callback(hObject, eventdata, handles)
+% hObject    handle to txt_gridsize (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of txt_gridsize as text
+%        str2double(get(hObject,'String')) returns contents of txt_gridsize as a double
+    handles.gridsize = str2double(get(hObject,'String'));
+    guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function txt_gridsize_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to txt_gridsize (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function txt_pxpermm_Callback(hObject, eventdata, handles)
+% hObject    handle to txt_pxpermm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of txt_pxpermm as text
+%        str2double(get(hObject,'String')) returns contents of txt_pxpermm as a double
+    handles.pixpermm = str2double(get(hObject,'String'));
+    guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function txt_pxpermm_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to txt_pxpermm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

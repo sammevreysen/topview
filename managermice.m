@@ -62,17 +62,24 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
         handles.(varfields{i}) = vars.(varfields{i});
     end    
     
-    if(nargin > 4)
-        recreatetopview = varargin{2};
+    if(nargin == 7)
+        recreatetopview = varargin{4};
     else
         recreatetopview = false;
+    end
+    if(~isfield(handles,'topview')||~isfield(handles.topview,'gridsize')||~isfield(handles.topview,'pixpermm'))
+        handles.gridsize = varargin{2};
+        handles.pixpermm = varargin{3};
+    else
+        handles.gridsize = handles.topview.gridsize;
+        handles.pixpermm = handles.topview.pixpermm;
     end
     
     %savefolder
     handles.pdfsavefolder = ['saved_project' filesep projectname filesep 'pdf' filesep];
         
     if(~isfield(handles,'topview') || recreatetopview)
-        handles.topview = createTopviewFile(handles.setuptable);
+        handles.topview = createTopviewFile(handles.setuptable,handles.gridsize,handles.pixpermm);
         saveProject(handles,'topview');
     else
        if(~isfield(handles.topview,'suporinfra'))
@@ -108,6 +115,11 @@ function managermice_OpeningFcn(hObject, eventdata, handles, varargin)
     set(handles.popnormalize,'String',[{'None'}; handles.mice]);
     if(~isnan(handles.topview.normalizetomouse))
         set(handles.popnormalize,'Value',find(ismember([{'None'}; handles.mice],handles.topview.normalizetomouse)));
+    end
+    
+    %compatibility checks
+    if(~isfield(handles.topview,'noLayers'))
+        handles.topview.noLayers = 1;
     end
     
     % Choose default command line output for managermice
@@ -274,7 +286,18 @@ function drawpermouse(hObject,handles,view)
         cmenu(j) = uicontextmenu;
         uimenu(cmenu(j), 'Label', 'Enlarge', 'Callback', @enlargesubplot);
         hMenu = uimenu(fig(j),'Label','Save');
-        uimenu(hMenu,'Label','Save as PDF...','Callback',{@saveFigAsPDF,hObject});
+        uimenu(hMenu,'Label','Save as PDF...','Callback',@saveFigAsPDF);
+        hMenu2 = uimenu(fig(j),'Label','Areamask');
+        hsubmenu = uimenu(hMenu2,'Label','Add area mask');
+        uimenu(hsubmenu,'Label','None','Callback',@addareamaskoverlay,'Checked','on');
+        files = dir(['visual_areas_mask' filesep '*.mat']);
+        for i=1:size(files,1)
+            uimenu(hsubmenu,'Label',strrep(files(i).name,'.mat',''),'Callback',@addareamaskoverlay);
+        end
+        hsubmenu2 = uimenu(hMenu2,'Label','Change layout...');
+        for i=1:size(files,1)
+            uimenu(hsubmenu2,'Label',strrep(files(i).name,'.mat',''),'Callback',@changeareamaskoverlay);
+        end
     end
    
     for i=1:size(handles.topview.micenames,1)
@@ -282,7 +305,12 @@ function drawpermouse(hObject,handles,view)
         hemisphere = handles.topview.mice.(mouse).hemisphere;
         for j=1:length(suporinfra)
             figure(fig(j));
-            figsub(j,i) = subplot(ceil(size(handles.topview.micenames,1)/4),min(size(handles.topview.micenames,1),4),i);
+            if(handles.topview.noLayers > 1)
+                figsub(j,i) = subplot(size(handles.topview.micenames,1),handles.topview.noLayers+1,(i-1)*(handles.topview.noLayers+1)+1);
+            else
+                figsub(j,i) = subplot(ceil(size(handles.topview.micenames,1)/4),min(size(handles.topview.micenames,1),4),i);
+            end
+                
             if(~isfield(handles.topview.mice.(mouse),['normalizefactor_' suporinfra{j}]))
                 handles = normalizemice(handles);
             end
@@ -311,29 +339,67 @@ function drawpermouse(hObject,handles,view)
                         yi = handles.topview.generalmodel.(handles.topview.mice.(mouse).hemisphere).(['yi_' suporinfra{j}]);
                         interpolprojected = handles.topview.mice.(mouse).([suporinfra{j} 'interpol_gm_smooth']);
                     end
-                    pcolor_rgb(xi/100,-yi/100,interpolprojected);
-                    hold on;
-                    if(strcmp(view,'topview'))
-                        plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,-handles.topview.mice.(mouse).bregmas/100,'k-');
+%                     pcolor_rgb(xi/100,-yi/100,interpolprojected);
+                    if(handles.topview.noLayers > 1)
+                        image(xi(1,:)/100,-yi(:,1)/100,scaleRGB(interpolprojected));
+                        hold on;
+                        if(strcmp(view,'topview'))
+                            plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,-handles.topview.mice.(mouse).bregmas/100,'k-');
+                        else
+                            plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,-handles.topview.bregmas/100,'k-');
+                        end
+                        hold off;
+                        axis xy equal tight;
+                        set(gca, 'Uicontextmenu',cmenu(j));
+                        set(gca,'Tag','jet');
+                        if(strcmp(mouse,handles.topview.normalizetomouse))
+                            title([mouse ' - ' suporinfra{j} ' (*)']);
+                        else
+                            title([mouse ' - ' suporinfra{j}]);
+                        end
+                        for k=1:handles.topview.noLayers
+                            subplot(size(handles.topview.micenames,1),handles.topview.noLayers+1,(i-1)*(handles.topview.noLayers+1)+1+k)
+                            imagesc(xi(1,:)/100,-yi(:,1)/100,interpolprojected(:,:,k));
+                            hold on;
+                            if(strcmp(view,'topview'))
+                                plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,-handles.topview.mice.(mouse).bregmas/100,'k-');
+                            else
+                                plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,-handles.topview.bregmas/100,'k-');
+                            end
+                            hold off;
+                            colormap gray;
+                            axis xy equal tight;
+                            set(gca, 'Uicontextmenu',cmenu(j));
+                            set(gca,'Tag','gray');
+                        end
                     else
-                        plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,-handles.topview.bregmas/100,'k-');
+                        imagesc(xi(1,:)/100,-yi(:,1)/100,interpolprojected);
+                        hold on;
+                        if(strcmp(view,'topview'))
+                            plot(handles.topview.mice.(mouse).([suporinfra{j} 'areaxyprojected_smooth'])./handles.topview.pixpermm,-handles.topview.mice.(mouse).bregmas/100,'k-');
+                        else
+                            plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,-handles.topview.bregmas/100,'k-');
+                        end
+                        hold off;
+                        axis xy equal tight;
+                        set(gca, 'Uicontextmenu',cmenu(j));
+                        set(gca,'Tag','jet');
+                        if(strcmp(mouse,handles.topview.normalizetomouse))
+                            title([mouse ' - ' suporinfra{j} ' (*)']);
+                        else
+                            title([mouse ' - ' suporinfra{j}]);
+                        end
                     end
-                    if(all(xi < 0))
-                        ls = 'k<';
-                    else
-                        ls = 'k>';
-                    end
-                    plot(-3.7*ones(1,size(handles.topview.mice.(mouse).bregmas,1)),-handles.topview.mice.(mouse).bregmas/100,ls);
+                    
+%                     if(all(xi < 0))
+%                         ls = 'k<';
+%                     else
+%                         ls = 'k>';
+%                     end
+%                     plot(-3.7*ones(1,size(handles.topview.mice.(mouse).bregmas,1)),-handles.topview.mice.(mouse).bregmas/100,ls);
                     hold off;
             end
             
-            set(figsub(j,i), 'Uicontextmenu',cmenu(j));
-            set(figsub(j,i),'Tag','jet');
-            if(strcmp(mouse,handles.topview.normalizetomouse))
-                title([mouse ' - ' suporinfra{j} ' (*)']);
-            else
-                title([mouse ' - ' suporinfra{j}]);
-            end
             ylims{j,i} = ylim;
             xlims{j,i} = xlim;
             clims{j,i} = caxis;
@@ -349,7 +415,7 @@ function drawpermouse(hObject,handles,view)
 %     set(figsub,'Xlim',[min(xlims(:,1)) max(xlims(:,2))]);
     set(figsub,'Xlim',[min(xlims(:,1))*(1 - (sign(min(xlims(:,1)))*0.03)) max(xlims(:,2))*(1 + (sign(min(xlims(:,1)))*0.03))]);
     set(fig,'Visible','on');
-    axis ij equal tight;
+    
     guidata(hObject,handles);
 %     saveProject(handles,'topview');
         
@@ -379,6 +445,12 @@ function drawpercondition(hObject,handles,view)
             condition = handles.topview.conditionnames{i};
             marg = [0.05 0.05];
             for j=1:length(suporinfra)
+                figure(fig(j));
+                if(handles.topview.noLayers > 1)
+                    figsub(j,i) = subplot(size(handles.topview.conditionnames,1),handles.topview.noLayers+1,(i-1)*(handles.topview.noLayers+1)+1);
+                else
+                    figsub(j,i) = subplot(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i);
+                end
                 switch view
                     case 'flatmount'
                         figure(fig(j));
@@ -390,16 +462,37 @@ function drawpercondition(hObject,handles,view)
                         hold off;
                     case 'topview'
                         figure(fig(j));
-                        figsub(j,i) = subplot_tight(ceil(size(handles.topview.conditionnames,1)/4),min(size(handles.topview.conditionnames,1),4),i,marg);
-                        pcolor_rgb(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])/100,-handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol_smooth']));
-                        hold on;
-                        plot(handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_mean_interpol'])/100,-handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_yi'])/100,'k-');
-                        hold off;
-                        axis xy equal tight;
+                        if(handles.topview.noLayers > 1)
+                            image(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])(1,:)/100,-handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])(:,1)/100,scaleRGB(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol_smooth'])));
+                            hold on;
+                            plot(handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_mean_interpol'])/100,-handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_yi'])/100,'k-');
+                            hold off;
+                            axis xy equal tight;
+                            set(gca, 'Uicontextmenu',cmenu(j));
+                            set(gca,'Tag','jet');
+                            title([condition ' - ' suporinfra{j}]);
+                            for k=1:handles.topview.noLayers
+                                subplot(size(handles.topview.conditionnames,1),handles.topview.noLayers+1,(i-1)*(handles.topview.noLayers+1)+1+k)
+                                image(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])(1,:)/100,-handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])(:,1)/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol_smooth'])(:,:,k));
+                                hold on;
+                                plot(handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_mean_interpol'])/100,-handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_yi'])/100,'k-');
+                                hold off;
+                                colormap gray;
+                                axis xy equal tight;
+                                set(gca, 'Uicontextmenu',cmenu(j));
+                                set(gca,'Tag','gray');
+                            end
+                        else
+                            imagesc(handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_xi'])(1,:)/100,-handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_yi'])(:,1)/100,handles.topview.conditions.(condition).(['topview_' suporinfra{j} '_mean_interpol_smooth']));
+                            hold on;
+                            plot(handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_mean_interpol'])/100,-handles.topview.conditions.(condition).(['topview_area_' suporinfra{j} '_yi'])/100,'k-');
+                            hold off;
+                            axis xy equal tight;
+                            set(gca, 'Uicontextmenu',cmenu(j));
+                            set(gca,'Tag','gray');
+                            title([condition ' - ' suporinfra{j}]);
+                        end
                 end
-                set(figsub(j,i), 'Uicontextmenu',cmenu(j));
-                set(figsub(j,i),'Tag','jet');
-                title([condition ' - ' suporinfra{j}]);
                 xlims(j,i,:) = xlim;
                 ylims(j,i,:) = ylim;
                 clims(j,i,:) = caxis;

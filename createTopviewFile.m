@@ -1,4 +1,4 @@
-function topview = createTopviewFile(setuptable)
+function topview = createTopviewFile(setuptable,gridsize,pixpermm)
 %%%%%%%%%%%%%%%%%%%%%%%%
 % function createTopviewFile creates a structure with data sorted by mice
 % and conditions
@@ -13,8 +13,8 @@ function topview = createTopviewFile(setuptable)
     lr = {'left';'right'};
     suporinfra = {'supra';'infra';'total'};
     toporbot = {'top';'bot';'top'}; %assume total
-    topview.gridsize = 0.1; %0.2 for rat
-    topview.pixpermm = 52.3864;
+    topview.gridsize = gridsize; %0.1; %0.2 for rat
+    topview.pixpermm = pixpermm; %52.3864;
     topview.smoothwindow = topview.gridsize*2; %0.2;
      
     bregmas = cellfun(@(x) num2str(x.bregma),setuptable(:,5),'UniformOutput',false);
@@ -29,6 +29,7 @@ function topview = createTopviewFile(setuptable)
     topview.areas = setuptable{1,5}.areas;
     topview.lr = lr;
     topview.suporinfra = suporinfra;
+    topview.noLayers = size(setuptable{1,5}.meanbg,1);
    
     
     for i=1:size(topview.conditionnames,1)
@@ -44,8 +45,11 @@ function topview = createTopviewFile(setuptable)
             topview.mice.(mouse).bregmas = cell2mat(cellfun(@(x) x.bregma,setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false));
             topview.mice.(mouse).segments = cell2mat(cellfun(@(x) x.bregma,setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false));
             for h=1:length(suporinfra)
-                %calc relative signal and interpolate missing values
-                topview.mice.(mouse).(suporinfra{h}) = inpaint_nans_no_extrapolation((1-(cell2mat(cellfun(@(x) x.(['mean' suporinfra{h} '_raw']), setuptable(strcmp(setuptable(:,2),mouse),6),'UniformOutput',false))./repmat(cell2mat(cellfun(@(x) x.meanbg, setuptable(strcmp(setuptable(:,2),mouse),5),'UniformOutput',false)),1,topview.segments))).*100);
+                %calc relative signal and interpolate missing valuesµ
+                tmp = cell2mat(cellfun(@(x) permute(x.(['mean' suporinfra{h}]),[3 2 1]), setuptable(strcmp(setuptable(:,2),mouse),6),'UniformOutput',false));
+                for j=1:topview.noLayers
+                    topview.mice.(mouse).(suporinfra{h})(:,:,j) = inpaint_nans_no_extrapolation(tmp(:,:,j));
+                end
                 topview.mice.(mouse).(['arearel' suporinfra{h}]) = cell2mat(cellfun(@(x) x.([toporbot{h} 'arealrel']),setuptable(strcmp(setuptable(:,2),mouse),6),'UniformOutput',false));
             end
         catch

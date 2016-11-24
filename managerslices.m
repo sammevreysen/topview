@@ -60,6 +60,8 @@ if(ischar(varargin{1}))
 else
     handles.setuptable = varargin{1};
     handles.projectname = varargin{2};
+    handles.gridsize = varargin{3};
+    handles.pixpermm = varargin{4};
 end
 if(~isfield(handles.setuptable{1,5},'bregma'))
     handles.setuptable = alignbregmas(handles.setuptable);
@@ -264,7 +266,7 @@ function pushmice_Callback(hObject, eventdata, handles)
             end
         end
         if(all(checklist))
-            managermice({handles.projectname},true);
+            managermice({handles.projectname},handles.gridsize,handles.pixpermm,true);
         end
     end
     guidata(hObject,handles);
