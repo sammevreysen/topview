@@ -1,4 +1,4 @@
-function topview = runPseudoTteststepdown(topview,condnameA,condnameB,suporinfra,equalvariances)
+function topview = runPseudoTteststepdown(topview,condnameA,condnameB,suporinfra,equalvariances,varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function runPseudoTtest
 %
@@ -26,6 +26,9 @@ function topview = runPseudoTteststepdown(topview,condnameA,condnameB,suporinfra
     
     %create intercondition structure
     conditioncombname = [condnameA '_' condnameB];
+    if(isfield(topview,'interconditions') && isfield(topview.interconditions,conditioncombname))
+        topview.interconditions = rmfield(topview.interconditions,conditioncombname);
+    end
     topview.interconditions.(conditioncombname).conditions = {condnameA condnameB};
     %permutations and its complement
     miceconditionA = topview.conditions.(condnameA).mice;
@@ -55,15 +58,18 @@ function topview = runPseudoTteststepdown(topview,condnameA,condnameB,suporinfra
     Cmin = ones(numel(xi),1);
     
     %initiate progress report
-    parfor_progress(N);
-    
+    if(nargin<6)
+        parfor_progress(N);
+    end
 %     total_tstat = nan(size(xi,1),size(xi,2),N);
     
     %run observed condition first
     tstat_observed_ind = zeros(numel(xi),1);
     [observed_tstat,observed_topviewABdiff,observed_topviewABdiff_relative] = pseudottestcondition(perms(1,:),permscomplement(1,:));
     [tstat_observed_sorted,tstat_observed_ind] = sort(reshape(observed_tstat',[],1));
-    parfor_progress;
+    if(nargin<6)
+        parfor_progress;
+    end
     
 %     total_tstat(:,:,1) = observed_tstat;
     
@@ -76,7 +82,9 @@ function topview = runPseudoTteststepdown(topview,condnameA,condnameB,suporinfra
         Cmin = Cmin + cmin;
         
         %report progress
-        parfor_progress;
+        if(nargin<6)
+            parfor_progress;
+        end
     end
     % pvalues
     Psdmax_accent = Cmax./N;
@@ -96,12 +104,15 @@ function topview = runPseudoTteststepdown(topview,condnameA,condnameB,suporinfra
     topview.interconditions.(conditioncombname).(['nanmap_' suporinfra]) = ~isnan(observed_tstat);
     topview.interconditions.(conditioncombname).(['Psdmax' suporinfra]) = Psdmax;
     topview.interconditions.(conditioncombname).(['Psdmin' suporinfra]) = Psdmin;
+%     topview.interconditions.(conditioncombname).(['tstattotal_' suporinfra]) = total_tstat;
     topview.interconditions.(conditioncombname).hemisphere = topview.conditions.(condnameA).hemisphere;
     
     %clean progress report
-    parfor_progress(0);
+    if(nargin<6)
+        parfor_progress(0);
+    end
     time = toc;
-    fprintf('Time elapsed %d seconds\n',round(time));
+%     fprintf('Time elapsed %d seconds\n',round(time));
     
     function [tstat,topviewABdiff,topviewABdiffrelative] = pseudottestcondition(perms,permscomplement)
         %stack and align mice, interpolate per mouse, merge in condition and interpolate
