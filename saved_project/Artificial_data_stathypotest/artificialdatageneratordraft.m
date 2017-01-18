@@ -91,5 +91,27 @@ colormap(gca,newcmap)
 
 %% check FWER (family wise error rate)
 [totmax,totmin] = FWERchecker(topview);
-sum(squeeze(any(any(totmax <= 0.05,1),2)))./1000 % = 0.0510
-(sum(squeeze(any(any(totmax <= 0.025,1),2)))+sum(squeeze(any(any(totmin <= 0.025,1),2))))./1000 %n moet > 3 zijn (deze nacht runnen)
+sum(squeeze(any(any(totaalmax <= 0.05,1),2)))./1500 % = 0.0510
+(sum(squeeze(any(any(totaalmax(:,:,ind) <= 0.025,1),2)))+sum(squeeze(any(any(totaalmin(:,:,ind) <= 0.025,1),2))))./1000 %n moet > 3 zijn (deze nacht runnen)
+sum(squeeze(any(any(totaalmax(:,:,ind) <= 0.025,1),2)))./1000
+sum(squeeze(any(any(totaalmin(:,:,ind) <= 0.025,1),2)))./1000 
+%%
+figure();
+subplot(1,5,1)
+imagesc(1:10:291,1:10:241,topview.conditions.Control1.total_mean_interpol)
+axis ij equal tight
+subplot(1,5,2)
+imagesc(1:10:291,1:10:241,topview.conditions.Control2.total_mean_interpol)
+axis ij equal tight
+subplot(1,5,3);
+imagesc(1:10:291,1:10:241,topview.interconditions.Control1_Control2.topviewABdiff_relative_total)
+axis ij equal tight
+subplot(1,5,4);
+[y,x] = hist(squeeze(min(min(finalmax,[],1),[],2)),50);
+y = y./sum(y);
+bar(x,y,1);
+subplot(1,5,5);
+[y,x] = hist(squeeze(min(min(finalmin,[],1),[],2)),50);
+y = y./sum(y);
+bar(x,y,1);
+
