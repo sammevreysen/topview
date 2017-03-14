@@ -47,7 +47,7 @@ function exportToExcel(projectresults,filename)
     dim = [-1,0];
     for i=1:length(mice)
         mouse = projectresults.mice.(mice{i});
-        regions = fieldnames(mouse.regions);
+%         regions = fieldnames(mouse.regions);
         micetab{dim(1)+2,1} = mice{i};
         %segments
         micetab{dim(1)+3,1} = 'Supra Segments';
@@ -79,55 +79,55 @@ function exportToExcel(projectresults,filename)
         micetab(tempdim(1)+4,2:2+size(mouse.botarearel_mean,2)-1) = num2cell(mouse.botarearel_mean);
         
         %regions
-        for j=1:size(regions,1)
-            tempdim = size(micetab);
-            regio = fieldnames(mouse.regions.(regions{j}));
-            micetab{tempdim(1)+2,1} = ['Supra ' regions{j}];
-            for k=1:size(regio,1)
-                micetab{tempdim(1)+2,1+k} = regio{k};
-                micetab(tempdim(1)+2+(1:size(mouse.regions.(regions{j}).(regio{k}).segments_supra_mean,1)),1+k) = num2cell(mouse.regions.(regions{j}).(regio{k}).segments_supra_mean);
-            end
-            tempdim = size(micetab);
-            regmean = zeros(1,size(regio,1));
-            regstd = zeros(1,size(regio,1));
-            regste = zeros(1,size(regio,1));
-            for k=1:size(regio,1)
-                regmean(k) = mean(mouse.regions.(regions{j}).(regio{k}).segments_supra_mean);
-                regstd(k) = std(mouse.regions.(regions{j}).(regio{k}).segments_supra_mean);
-                regste(k) = regstd(k)/sqrt(length(mouse.regions.(regions{j}).(regio{k}).segments_supra_mean));
-                
-            end
-            micetab{tempdim(1)+1,1} = 'Mean';
-            micetab(tempdim(1)+1,2:2+size(regio,1)-1) = num2cell(regmean);
-            micetab{tempdim(1)+2,1} = 'Std';
-            micetab(tempdim(1)+2,2:2+size(regio,1)-1) = num2cell(regstd);
-            micetab{tempdim(1)+3,1} = 'Ste';
-            micetab(tempdim(1)+3,2:2+size(regio,1)-1) = num2cell(regste);
-            
-            tempdim = size(micetab);
-            regio = fieldnames(mouse.regions.(regions{j}));
-            micetab{tempdim(1)+2,1} = ['Infra ' regions{j}];
-            for k=1:size(regio,1)
-                micetab{tempdim(1)+2,1+k} = regio{k};
-                micetab(tempdim(1)+2+(1:size(mouse.regions.(regions{j}).(regio{k}).segments_infra_mean,1)),1+k) = num2cell(mouse.regions.(regions{j}).(regio{k}).segments_infra_mean);
-            end
-            tempdim = size(micetab);
-            regmean = zeros(1,size(regio,1));
-            regstd = zeros(1,size(regio,1));
-            regste = zeros(1,size(regio,1));
-            for k=1:size(regio,1)
-                regmean(k) = mean(mouse.regions.(regions{j}).(regio{k}).segments_infra_mean);
-                regstd(k) = std(mouse.regions.(regions{j}).(regio{k}).segments_infra_mean);
-                regste(k) = regstd(k)/sqrt(length(mouse.regions.(regions{j}).(regio{k}).segments_infra_mean));
-                
-            end
-            micetab{tempdim(1)+1,1} = 'Mean';
-            micetab(tempdim(1)+1,2:2+size(regio,1)-1) = num2cell(regmean);
-            micetab{tempdim(1)+2,1} = 'Std';
-            micetab(tempdim(1)+2,2:2+size(regio,1)-1) = num2cell(regstd);
-            micetab{tempdim(1)+3,1} = 'Ste';
-            micetab(tempdim(1)+3,2:2+size(regio,1)-1) = num2cell(regste);
-        end
+%         for j=1:size(regions,1)
+%             tempdim = size(micetab);
+%             regio = fieldnames(mouse.regions.(regions{j}));
+%             micetab{tempdim(1)+2,1} = ['Supra ' regions{j}];
+%             for k=1:size(regio,1)
+%                 micetab{tempdim(1)+2,1+k} = regio{k};
+%                 micetab(tempdim(1)+2+(1:size(mouse.regions.(regions{j}).(regio{k}).segments_supra_mean,1)),1+k) = num2cell(mouse.regions.(regions{j}).(regio{k}).segments_supra_mean);
+%             end
+%             tempdim = size(micetab);
+%             regmean = zeros(1,size(regio,1));
+%             regstd = zeros(1,size(regio,1));
+%             regste = zeros(1,size(regio,1));
+%             for k=1:size(regio,1)
+%                 regmean(k) = mean(mouse.regions.(regions{j}).(regio{k}).segments_supra_mean);
+%                 regstd(k) = std(mouse.regions.(regions{j}).(regio{k}).segments_supra_mean);
+%                 regste(k) = regstd(k)/sqrt(length(mouse.regions.(regions{j}).(regio{k}).segments_supra_mean));
+%                 
+%             end
+%             micetab{tempdim(1)+1,1} = 'Mean';
+%             micetab(tempdim(1)+1,2:2+size(regio,1)-1) = num2cell(regmean);
+%             micetab{tempdim(1)+2,1} = 'Std';
+%             micetab(tempdim(1)+2,2:2+size(regio,1)-1) = num2cell(regstd);
+%             micetab{tempdim(1)+3,1} = 'Ste';
+%             micetab(tempdim(1)+3,2:2+size(regio,1)-1) = num2cell(regste);
+%             
+%             tempdim = size(micetab);
+%             regio = fieldnames(mouse.regions.(regions{j}));
+%             micetab{tempdim(1)+2,1} = ['Infra ' regions{j}];
+%             for k=1:size(regio,1)
+%                 micetab{tempdim(1)+2,1+k} = regio{k};
+%                 micetab(tempdim(1)+2+(1:size(mouse.regions.(regions{j}).(regio{k}).segments_infra_mean,1)),1+k) = num2cell(mouse.regions.(regions{j}).(regio{k}).segments_infra_mean);
+%             end
+%             tempdim = size(micetab);
+%             regmean = zeros(1,size(regio,1));
+%             regstd = zeros(1,size(regio,1));
+%             regste = zeros(1,size(regio,1));
+%             for k=1:size(regio,1)
+%                 regmean(k) = mean(mouse.regions.(regions{j}).(regio{k}).segments_infra_mean);
+%                 regstd(k) = std(mouse.regions.(regions{j}).(regio{k}).segments_infra_mean);
+%                 regste(k) = regstd(k)/sqrt(length(mouse.regions.(regions{j}).(regio{k}).segments_infra_mean));
+%                 
+%             end
+%             micetab{tempdim(1)+1,1} = 'Mean';
+%             micetab(tempdim(1)+1,2:2+size(regio,1)-1) = num2cell(regmean);
+%             micetab{tempdim(1)+2,1} = 'Std';
+%             micetab(tempdim(1)+2,2:2+size(regio,1)-1) = num2cell(regstd);
+%             micetab{tempdim(1)+3,1} = 'Ste';
+%             micetab(tempdim(1)+3,2:2+size(regio,1)-1) = num2cell(regste);
+%         end
         
         
         

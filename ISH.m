@@ -793,7 +793,7 @@ function handles = extractdata(handles)
         fprintf(flogid,'Calculating OD skipped');
         fprintf('Calculating OD skipped');
     end
-if 0 
+if 1
     %start resultstruct
     projectresults.name = handles.savename;
     projectresults.amountslices = size(handles.setuptable,1);
@@ -853,13 +853,13 @@ if 0
                    tempval_supra = setuptable{j,6}.meansupra(:,1:size(setuptable{j,6}.meansupra,2) >= toparearel(end,k) & 1:size(setuptable{j,6}.meansupra,2) < toparearel(end,k+1));
                    tempval_infra = setuptable{j,6}.meaninfra(:,1:size(setuptable{j,6}.meaninfra,2) >= botarearel(end,k) & 1:size(setuptable{j,6}.meaninfra,2) < botarearel(end,k+1));
                    if(~isfield(regions_areas,areas{k}))
-                       regions_areas(1).(areas{k}).segments_supra = permute(tempval_supra,[3,2,1]);
+                       regions_areas(1).(areas{k}).segments_supra = reshape(tempval_supra,1,[]);
                        regions_areas(1).(areas{k}).segments_supra_mean = nanmean(tempval_supra,2)';
-                       regions_areas(1).(areas{k}).segments_infra = permute(tempval_infra,[3,2,1]);
+                       regions_areas(1).(areas{k}).segments_infra = reshape(tempval_infra,1,[]);
                        regions_areas(1).(areas{k}).segments_infra_mean = nanmean(tempval_infra,2)';
                    else
-                       regions_areas.(areas{k}).segments_supra = cat(1,regions_areas.(areas{k}).segments_supra, permute(tempval_supra,[3,2,1]));
-                       regions_areas.(areas{k}).segments_infra = cat(1,regions_areas.(areas{k}).segments_infra, permute(tempval_infra,[3,2,1]));
+                       regions_areas.(areas{k}).segments_supra = [regions_areas.(areas{k}).segments_supra reshape(tempval_supra,1,[])];
+                       regions_areas.(areas{k}).segments_infra = [regions_areas.(areas{k}).segments_infra reshape(tempval_infra,1,[])];
                        regions_areas.(areas{k}).segments_supra_mean = [regions_areas.(areas{k}).segments_supra_mean; nanmean(tempval_supra,2)'];
                        regions_areas.(areas{k}).segments_infra_mean = [regions_areas.(areas{k}).segments_infra_mean; nanmean(tempval_infra,2)'];
                    end
@@ -1037,12 +1037,12 @@ end
     else
         save([handles.savepath char(handles.savename) '.mat'],'setuptable');
     end
-%     save([handles.savepath handles.savename '_results.mat'],'projectresults');
+    save([handles.savepath handles.savename '_results.mat'],'projectresults');
     fprintf('Project saved as %s\n',handles.savename);
-%     fprintf('Results saved as %s\n',[handles.savename '_results.mat']);
+    fprintf('Results saved as %s\n',[handles.savename '_results.mat']);
     %store handles
     handles.setuptable = setuptable;
-%     handles.projectresults = projectresults;
+    handles.projectresults = projectresults;
 %     fprintf('Data sorted\n');
     
 function handles = runstatistics(handles)
@@ -1674,11 +1674,12 @@ function handles = runstatistics(handles)
     fprintf('Analysis ended\n');
     
     %save setuptable and resultfile
+    setuptable = handles.setuptable;
     if(isfield(handles,'ROI'))
         ROI = handles.ROI;
-        save([handles.savepath char(handles.savename) '.mat'],'handles.setuptable','ROI');
+        save([handles.savepath char(handles.savename) '.mat'],'setuptable','ROI');
     else
-        save([handles.savepath char(handles.savename) '.mat'],'handles.setuptable');
+        save([handles.savepath char(handles.savename) '.mat'],'setuptable');
     end
     save([handles.savepath handles.savename '_results.mat'],'projectresults');
     fprintf('Project saved as %s\n',handles.savename);

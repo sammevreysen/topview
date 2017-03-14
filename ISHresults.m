@@ -708,9 +708,12 @@ function handles = draw_axes_condition(handles,cond)
                  plot(1:size(region_supra_mean,2),region_supra_mean,'rd');
              else
                  if(handles.ste)
-                     hbar = barweb(region_supra_mean', region_supra_ste', 0.6, regnames, [], [], 'Relative Optical Density', [0.6,0.6,0.6], [], cond);
+                     hbar = errorbar(region_supra_mean', region_supra_ste'); %, 0.6, regnames, [], [], 'Relative Optical Density', [0.6,0.6,0.6], [], cond);
                  else
-                     hbar = barweb(region_supra_mean', region_supra_std', 0.6, regnames, [], [], 'Relative Optical Density', [0.6,0.6,0.6], [], cond);
+                     bar(region_supra_mean');
+                     hold on;
+                     hbar = errorbar(region_supra_mean', region_supra_std','LineStyle','none'); %, 0.6, regnames, [], [], 'Relative Optical Density', [0.6,0.6,0.6], [], cond);
+                     hold off;
                  end
              end
              hold on;
@@ -1349,17 +1352,15 @@ function saveasfig_Callback(hObject, eventdata, handles)
     end
     path = uigetdir(path,'Save Current Graphs to this directory');
     handles.savegraphpath = path;
-    newax = copyobj(handles.axes_mouse_supra,fig);
-    axes(newax);
+    newax = copyobj([handles.axes_mouse_supra handles.legend_supra],fig);
+    figure(fig);
     
     %fonts
     set(0,'DefaultTextFontname', 'CMU Sans Serif');
     set(0,'DefaultAxesFontName', 'CMU Sans Serif');
     set(0,'defaulttextinterpreter','latex');
     
-    
-    newleg = copyobj(handles.legend_supra,fig);
-    set(newleg,'Position',[0.7082 0.1460 0.1786 0.1048]);
+    set(newax(2),'Position',[0.7082 0.1460 0.1786 0.1048]);
     set(gca,'YLim',[handles.ymin handles.ymax]);
     
     set(gca,'Units','Normalized');
@@ -1389,19 +1390,17 @@ function saveasfig_Callback(hObject, eventdata, handles)
     else
         extra = '';
     end
-    print(fig,'-dpsc2', '-noui', '-painters', [path '\' listitem '_supra_' strrep(handles.graphtype{:},' ','-') extra '.ps']);
+    savefile = [path '\' listitem '_supra_' strrep(handles.graphtype{:},' ','-') extra];
+    print(gcf,'-depsc',savefile,'-painters');
     %saveas(fig,[path '\' listitem '_supra_' strrep(handles.graphtype{:},' ','-') '.fig']);
     
-    axes(newax);
+    figure(fig);
     clf;
-    newax = copyobj(handles.axes_mouse_infra,fig);
-    axes(newax);
+    newax = copyobj([handles.axes_mouse_infra,handles.legend_infra],fig);
    
-    set(newax, 'Box','off');
     xlabel('Segments');
     
-    newleg = copyobj(handles.legend_infra,fig);
-    set(newleg,'Position',[0.7082 0.1460 0.1786 0.1048]);
+    set(newax(2),'Position',[0.7082 0.1460 0.1786 0.1048]);
     set(gca,'YLim',[handles.ymin handles.ymax]);
     
     set(gca,'Units','Normalized');
@@ -1431,7 +1430,8 @@ function saveasfig_Callback(hObject, eventdata, handles)
     else
         extra = '';
     end
-    print(fig,'-dpsc2', '-noui', '-painters', [path '\' listitem '_infra_' strrep(handles.graphtype{:},' ','-') extra '.ps']);
+    savefile = [path '\' listitem '_infra_' strrep(handles.graphtype{:},' ','-') extra];
+    print(gcf,'-depsc',savefile,'-painters');
     %saveas(fig,[path '\' listitem '_infra_' strrep(handles.graphtype{:},' ','-') '.fig']);
     close(fig)
     guidata(hObject, handles);
