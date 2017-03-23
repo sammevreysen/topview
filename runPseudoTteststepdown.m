@@ -23,13 +23,8 @@ function topview = runPseudoTteststepdown(topview,condnameA,condnameB,suporinfra
 %     end
     lr = topview.lr;
     hemisphere = lr{strcmp(condnameA(end-2:end),'_RH')+1};
-    
-    %create intercondition structure
     conditioncombname = [condnameA '_' condnameB];
-    if(isfield(topview,'interconditions') && isfield(topview.interconditions,conditioncombname))
-        topview.interconditions = rmfield(topview.interconditions,conditioncombname);
-    end
-    topview.interconditions.(conditioncombname).conditions = {condnameA condnameB};
+    
     %permutations and its complement
     miceconditionA = topview.conditions.(condnameA).mice;
     miceconditionB = topview.conditions.(condnameB).mice;

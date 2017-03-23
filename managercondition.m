@@ -113,6 +113,7 @@ function selecttable(hObject,callbackdata)
                 if(isfield(handles.topview,'interconditions') && isfield(handles.topview.interconditions,conditioncombname))
                     handles.topview.interconditions = rmfield(handles.topview.interconditions,conditioncombname);
                 end
+                handles.topview.interconditions.(conditioncombname).conditions = {data{callbackdata.Indices(1),2} data{callbackdata.Indices(1),3}};
                 for i = 1:size(handles.topview.suporinfra,1)
                     fprintf('Running pseudo T-test statistics \nfor %s\n',handles.topview.suporinfra{i});
                     handles.topview = runPseudoTteststepdown(handles.topview,data{callbackdata.Indices(1),2},data{callbackdata.Indices(1),3},handles.topview.suporinfra{i},equalvariances);
