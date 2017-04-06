@@ -259,6 +259,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% Matches the selection flags in topview.interconditions with selection
+% flags in the condition table
 function handles = checked(handles)
     data = get(handles.uitable,'Data');
     data(any(strcmp(data(:,2:3),''),2),:) = [];
@@ -268,8 +270,10 @@ function handles = checked(handles)
         lst = [lst; {conditioncombname}];
         handles.topview.interconditions.(conditioncombname).selected = data{i,1};
     end
+    
     savedlst = fieldnames(handles.topview.interconditions);
     trash = savedlst(~ismember(savedlst,lst));
     for i=1:size(trash,1)
+        conditioncombname = trash{i};
         handles.topview.interconditions.(conditioncombname).selected = false;
     end
