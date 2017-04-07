@@ -25,36 +25,55 @@ function topview = runPseudoTteststepdown(topview,condnameA,condnameB,suporinfra
     hemisphere = lr{strcmp(condnameA(end-2:end),'_RH')+1};
     conditioncombname = [condnameA '_' condnameB];
     
-    %permutations and its complement
+    % Set the permutations that will be calculated. If N equals the number
+    % of all possible permutations, the full set of permutations is used.
+    % If N is smaller, random permutations are sampled
     miceconditionA = topview.conditions.(condnameA).mice;
     miceconditionB = topview.conditions.(condnameB).mice;
-%     nA = size(miceconditionA,1);
-%     nB = size(miceconditionB,1);
-    mice = [miceconditionA; miceconditionB];
-    perms = nchoosek(mice, size(miceconditionA,1));
-    for j = 1:size(perms,1)
-        permscomplement(j,:) = mice(~ismember(mice,perms(j,:)))';
+    
+    n_A = length(miceconditionA);
+    n_B = length(miceconditionB);
+    
+    all_mice         = [miceconditionA; miceconditionB];
+    n_permutations   = topview.interconditions.(conditioncombname).n_permutations;
+    max_permutations = nchoosek(n_A + n_B,n_A);
+    
+    if n_permutations == max_permutations
+        perms           = nchoosek(all_mice, n_A);
+        permscomplement = cell(size(perms,1),n_B);
+        
+        for j = 1:size(perms,1)
+            permscomplement(j,:) = all_mice(~ismember(all_mice,perms(j,:)))';
+        end
+    else
+        perms = cell(n_permutations,n_A);
+        permscomplement = cell(n_permutations, n_B);
+        perms(1,:) = miceconditionA;
+        permscomplement(1,:) = miceconditionB;
+        
+        for j = 2:n_permutations
+            perms(j,:) = all_mice(randperm(n_A+n_B,n_A));
+            permscomplement(j,:) = all_mice(~ismember(all_mice,perms(j,:)));
+        end
     end
+    
     topview.interconditions.(conditioncombname).perms = perms;
     topview.interconditions.(conditioncombname).permscomplement = permscomplement;
-    %calculate all permutations
+    
+    % Get generalmodel parameters
     xs = topview.generalmodel.(hemisphere).(['mask_' suporinfra]);
     ys = topview.generalmodel.(hemisphere).bregmas;
     bregmas = ys(:,1);
-%     xa = topview.generalmodel.(hemisphere).(['areas_' suporinfra]);
-%     [xi yi] = meshgrid(min(xs(:)):max(xs(:)),min(ys(:)):max(ys(:)));
     xi = topview.generalmodel.(hemisphere).(['xi_' suporinfra]);
     yi = topview.generalmodel.(hemisphere).(['yi_' suporinfra]);
     
     %slice variables
-    N = size(perms,1);
-    topview.interconditions.(conditioncombname).N = N;
     Cmax = ones(numel(xi),1);
     Cmin = ones(numel(xi),1);
     
     %initiate progress report
     if(nargin<6)
-        parfor_progress(N);
+        parfor_progress(n_permutations);
     end
 %     total_tstat = nan(size(xi,1),size(xi,2),N);
     
@@ -69,7 +88,7 @@ function topview = runPseudoTteststepdown(topview,condnameA,condnameB,suporinfra
 %     total_tstat(:,:,1) = observed_tstat;
     
     %run all other permutations
-    for j = 2:N
+    for j = 2:n_permutations
         [tstat,~,~] = pseudottestcondition(perms(j,:),permscomplement(j,:));
 %         total_tstat(:,:,j) = tstat;
         [cmin,cmax] = stepdowntest(tstat);
@@ -82,8 +101,8 @@ function topview = runPseudoTteststepdown(topview,condnameA,condnameB,suporinfra
         end
     end
     % pvalues
-    Psdmax_accent = Cmax./N;
-    Psdmin_accent = Cmin./N;
+    Psdmax_accent = Cmax./n_permutations;
+    Psdmin_accent = Cmin./n_permutations;
     %enforce monotonicity
     Psdmax(tstat_observed_ind) = enforce_max_monotonicity(Psdmax_accent);
     Psdmin(tstat_observed_ind) = enforce_min_monotonicity(Psdmin_accent);

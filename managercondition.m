@@ -67,7 +67,7 @@ function managercondition_OpeningFcn(hObject, eventdata, handles, varargin)
        
     headers = {'Select','ConditionA','ConditionB','#A - #B','#Permutations','PT-t (=S²)','PT-t (~=S²'};
     colformat = {'logical',handles.conditions',handles.conditions','char','numeric','logical','logical'};
-    coledit = [true,true,true,false,false,true,true];
+    coledit = [true,true,true,false,true,true,true];
     
     if(isfield(handles.topview,'interconditions'))
         selected = num2cell(false(size(fieldnames(handles.topview.interconditions),1),1));
@@ -98,42 +98,48 @@ function managercondition_OpeningFcn(hObject, eventdata, handles, varargin)
 function selecttable(hObject,callbackdata)
     data = get(hObject,'Data');
     handles = guidata(hObject);
-    if(callbackdata.Indices(1) == size(data,1))
+    
+    row_index = callbackdata.Indices(1);
+    col_index = callbackdata.Indices(2);
+    
+    if(row_index == size(data,1))
         data = [data; {false} {''} {''} {''} {''} {false} {false}];
     end
-    switch callbackdata.Indices(2)
+    
+    switch col_index
         case {6,7}
-            if(all(~strcmp(data(callbackdata.Indices(1),[2 3]),'')))
-                if(callbackdata.Indices(2) == 6)
+            if(all(~strcmp(data(row_index,[2 3]),'')))
+                if(col_index == 6)
                     equalvariances = true;
                 else
                     equalvariances = false;
                 end
-                conditioncombname = [data{callbackdata.Indices(1),2} '_' data{callbackdata.Indices(1),3}];
+                conditioncombname = [data{row_index,2} '_' data{row_index,3}];
                 if(isfield(handles.topview,'interconditions') && isfield(handles.topview.interconditions,conditioncombname))
                     handles.topview.interconditions = rmfield(handles.topview.interconditions,conditioncombname);
                 end
-                handles.topview.interconditions.(conditioncombname).conditions = {data{callbackdata.Indices(1),2} data{callbackdata.Indices(1),3}};
+                handles.topview.interconditions.(conditioncombname).n_permutations = data{row_index,5};
+                handles.topview.interconditions.(conditioncombname).conditions = {data{row_index,2} data{row_index,3}};
                 for i = 1:size(handles.topview.suporinfra,1)
                     fprintf('Running pseudo T-test statistics \nfor %s\n',handles.topview.suporinfra{i});
-                    handles.topview = runPseudoTteststepdown(handles.topview,data{callbackdata.Indices(1),2},data{callbackdata.Indices(1),3},handles.topview.suporinfra{i},equalvariances);
+                    handles.topview = runPseudoTteststepdown(handles.topview,data{row_index,2},data{row_index,3},handles.topview.suporinfra{i},equalvariances);
                 end
                 saveProject(handles,'topview');
-                data{callbackdata.Indices(1),6} = callbackdata.Indices(2) == 6;
-                data{callbackdata.Indices(1),7} = callbackdata.Indices(2) == 7;
-                data{callbackdata.Indices(1),1} = true;
+                data{row_index,6} = col_index == 6;
+                data{row_index,7} = col_index == 7;
+                data{row_index,1} = true;
             end
         case {2,3}
-            if(all(~strcmp(data(callbackdata.Indices(1),[2 3]),'')))
-                nomiceA = size(handles.topview.conditions.(data{callbackdata.Indices(1),2}).mice,1);
-                nomiceB = size(handles.topview.conditions.(data{callbackdata.Indices(1),3}).mice,1);
-                data{callbackdata.Indices(1),4} = sprintf('%d - %d',nomiceA,nomiceB);
-                data{callbackdata.Indices(1),5} = nchoosek(nomiceA+nomiceB,nomiceA);
+            if(all(~strcmp(data(row_index,[2 3]),'')))
+                nomiceA = size(handles.topview.conditions.(data{row_index,2}).mice,1);
+                nomiceB = size(handles.topview.conditions.(data{row_index,3}).mice,1);
+                data{row_index,4} = sprintf('%d - %d',nomiceA,nomiceB);
+                data{row_index,5} = nchoosek(nomiceA+nomiceB,nomiceA);
             end
             
         case 1
-            if(all(~strcmp(data(callbackdata.Indices(1),[2 3]),'')))
-                conditioncombname = [data{callbackdata.Indices(1),2} '_' data{callbackdata.Indices(1),3}];
+            if(all(~strcmp(data(row_index,[2 3]),'')))
+                conditioncombname = [data{row_index,2} '_' data{row_index,3}];
                 handles.topview.interconditions.(conditioncombname).selected = callbackdata.NewData;
             end
                 
@@ -186,6 +192,9 @@ function menu_calcpTtseqvar_Callback(hObject, eventdata, handles)
             fprintf('%d/%d\n',i,size(data,1));
             for j = 1:size(handles.topview.suporinfra,1)
                 fprintf('Running pseudo T-test statistics \nfor %s\n',handles.topview.suporinfra{j});
+                conditioncombname = [data{i,2} '_' data{i,3}];
+                handles.topview.interconditions.(conditioncombname).n_permutations = data{i,5};
+                handles.topview.interconditions.(conditioncombname).conditions = {data{i,2} data{i,3}};
                 handles.topview = runPseudoTteststepdown(handles.topview,data{i,2},data{i,3},handles.topview.suporinfra{j},equalvariances);
             end
             data{i,6} = true;
@@ -213,6 +222,9 @@ function menu_calcpTtsneqvar_Callback(hObject, eventdata, handles)
             fprintf('%d/%d\n',i,size(data,1));
             for j = 1:size(handles.topview.suporinfra,1)
                 fprintf('Running pseudo T-test statistics \nfor %s\n',handles.topview.suporinfra{j});
+                conditioncombname = [data{i,2} '_' data{i,3}];
+                handles.topview.interconditions.(conditioncombname).n_permutations = data{i,5};
+                handles.topview.interconditions.(conditioncombname).conditions = {data{i,2} data{i,3}};
                 handles.topview = runPseudoTteststepdown(handles.topview,data{i,2},data{i,3},handles.topview.suporinfra{j},equalvariances);
             end
             data{i,6} = false;
@@ -270,10 +282,9 @@ function handles = checked(handles)
         lst = [lst; {conditioncombname}];
         handles.topview.interconditions.(conditioncombname).selected = data{i,1};
     end
-    
     savedlst = fieldnames(handles.topview.interconditions);
     trash = savedlst(~ismember(savedlst,lst));
     for i=1:size(trash,1)
-        conditioncombname = trash{i};
+		conditioncombname = trash{i};
         handles.topview.interconditions.(conditioncombname).selected = false;
     end
