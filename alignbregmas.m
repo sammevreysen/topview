@@ -1,4 +1,4 @@
-function out = alignbregmas(in)
+function out = alignbregmas(in,gridsizevar)
     hmain = figure('Units','normalized','OuterPosition',[0 0 1 1],'MenuBar','none','ToolBar','none','DockControls','off');
 %     hprev1 = figure('Units','normalized','OuterPosition',[0.5 0.5 0.5 0.5],'MenuBar','none','ToolBar','none','DockControls','off');
 %     hprev2 = figure('Units','normalized','OuterPosition',[0.5 0 0.5 0.5],'MenuBar','none','ToolBar','none','DockControls','off');
@@ -7,6 +7,9 @@ function out = alignbregmas(in)
     global info;
     cancel = 0;
     setuptable = in;
+    
+    global gridsize
+    gridsize = gridsizevar*100; %match precision of bregmas
     
     paintall();
     
@@ -32,16 +35,24 @@ end
 function paintall()
     global setuptable;
     global info;
+    global gridsize;
     info = {};
     hold on;
     setuptable = sortrows(setuptable,[1 2 3]);
     if(~isfield(setuptable{1,5},'bregma'))
-        %get bregma from filename
-        bregma = arrayfun(@(y) str2mat(y{:}(2:end)),arrayfun(@(x) regexp(x{:}(end-8:end),'[_-]\d{3}','match','once'),setuptable(:,3),'UniformOutput',false),'UniformOutput',false);
         for i=1:size(setuptable,1)
-            setuptable{i,5}.bregma = str2num(bregma{i});
+            tmp = regexp(setuptable{i,3},'[_-]\d{3}.','match','once');
+            setuptable{i,5}.bregma = str2num(tmp(2:end-1));
         end
     end
+    %check for duplicates
+    files = arrayfun(@(x,y,z) [x{:} '-' y{:} '-' z{:}],setuptable(:,1),setuptable(:,2),setuptable(:,3),'UniformOutput',false);
+    if(length(unique(files)) ~= length(files))
+        warning('%d duplicates has been removed.',length(files)-length(unique(files)))
+        [~,id] = unique(files);
+        setuptable = setuptable(id,:);
+    end
+    
     conditions = unique(setuptable(:,1));
     markers = {'s','o','d','p','h','x','*'};
     a = 1;
@@ -69,7 +80,7 @@ function paintall()
     %    figure(hprev2)
     for b=0:9
         %        subplot(5,5,b)
-        hp{b+1} = hist(rawbregmas,min(rawbregmas)+b-10:10:max(rawbregmas)+10);
+        hp{b+1} = hist(rawbregmas,min(rawbregmas)+b-10:gridsize:max(rawbregmas)+10);
         hp{b+1} = hp{b+1}./numel(rawbregmas);
         %        bar(hp{b});
     end
@@ -77,8 +88,8 @@ function paintall()
     %    figure(hprev2)
     %    plot(stds);
     offset = find(min(stds)==stds,1,'first')-2;
-    fixedbregmas = (min(rawbregmas)+offset-10:10:max(rawbregmas)+10)';
-    fixededges = (min(rawbregmas)+offset-15:10:max(rawbregmas)+15)';
+    fixedbregmas = (min(rawbregmas)+offset-10:gridsize:max(rawbregmas)+10)';
+    fixededges = (min(rawbregmas)+offset-15:gridsize:max(rawbregmas)+15)';
     plot(xlim,repmat(fixedbregmas',2,1),'k:','LineWidth',0.25);
     set(gcf,'UserData',fixedbregmas);
     
@@ -130,9 +141,9 @@ end
 function reset(object,event)
     %get bregma from filename
     global setuptable;
-    bregma = arrayfun(@(y) str2mat(y{:}(2:end)),arrayfun(@(x) regexp(x{:}(end-8:end),'[_-]\d{3}','match','once'),setuptable(:,3),'UniformOutput',false),'UniformOutput',false);
     for i=1:size(setuptable,1)
-        setuptable{i,5}.bregma = str2num(bregma{i});
+        tmp = regexp(setuptable{i,3},'[_-]\d{3}.','match','once');
+        setuptable{i,5}.bregma = str2num(tmp(2:end-1));
     end
     clf;
     paintall();
@@ -152,11 +163,12 @@ function selline(object,event)
 end
 
 function keyPress(object,event,id)
+    global gridsize;
     info = get(gcf,'UserData');
     if(strcmp(event.Key,'uparrow'))
-        info{id,4} = info{id,4}+10;
+        info{id,4} = info{id,4}+gridsize;
     elseif(strcmp(event.Key,'downarrow'))
-        info{id,4} = info{id,4}-10;
+        info{id,4} = info{id,4}-gridsize;
     end
     set(info{id,6},'YData',info{id,4});
     set(gcf,'Userdata',info);

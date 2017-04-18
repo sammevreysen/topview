@@ -2704,7 +2704,7 @@ function menu_alignbregmas_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_alignbregmas (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.setuptable = alignbregmas(handles.setuptable);
+    handles.setuptable = alignbregmas(handles.setuptable,handles.gridsize);
     fprintf('Bregmas aligned\n');
     guidata(hObject,handles);
 
@@ -2715,11 +2715,13 @@ function menu_resetbregma_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     setuptable = handles.setuptable;
-    bregma = arrayfun(@(y) str2mat(y{:}(2:end)),arrayfun(@(x) regexp(x{:}(end-8:end),'[_-]\d{3}','match','once'),setuptable(:,3),'UniformOutput',false),'UniformOutput',false);
+%     bregma = arrayfun(@(y) str2mat(y{:}(2:end)),arrayfun(@(x) regexp(x{:}(end-8:end),'[_-]\d{3}$','match','once'),setuptable(:,3),'UniformOutput',false),'UniformOutput',false);
     for i=1:size(setuptable,1)
-        setuptable{i,5}.bregma = str2num(bregma{i});
+        tmp = regexp(setuptable{i,3},'[_-]\d{3}.','match','once');
+        setuptable{i,5}.bregma = str2num(tmp(2:end-1));
     end
     handles.setuptable = setuptable;
+    fprintf('Bregma''s reset\n');
     guidata(hObject,handles);
 
 
