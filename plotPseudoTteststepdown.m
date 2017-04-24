@@ -32,6 +32,17 @@ function plotPseudoTteststepdown(topview,tail)
             
             cmenu = uicontextmenu;
             uimenu(cmenu, 'Label', 'Enlarge', 'Callback', @enlargesubplot);
+            hMenu2 = uimenu(fig,'Label','Areamask');
+            hsubmenu = uimenu(hMenu2,'Label','Add area mask');
+            uimenu(hsubmenu,'Label','None','Callback',@addareamaskoverlay,'Checked','on');
+            files = dir(['visual_areas_mask' filesep '*.mat']);
+            for i=1:size(files,1)
+                uimenu(hsubmenu,'Label',strrep(files(i).name,'.mat',''),'Callback',@addareamaskoverlay);
+            end
+            hsubmenu2 = uimenu(hMenu2,'Label','Change layout...');
+            for i=1:size(files,1)
+                uimenu(hsubmenu2,'Label',strrep(files(i).name,'.mat',''),'Callback',@changeareamaskoverlay);
+            end
             hMenu = uimenu(fig,'Label','Save');
             uimenu(hMenu,'Label','Save as PDF...','Callback',@saveFigAsPDF);
             if(strcmp(tail,'2-tailed'))
