@@ -66,6 +66,17 @@ function paintall()
             info{a,2} = condition;
             info{a,3} = mouse;
             info{a,5} = plot(repmat(a,1,length(info{a,1})),info{a,1},'-','Marker',marker,'HitTest','off');
+            %check duplicates
+            [~,id]=unique(info{a,1});
+            dbs = ~ismember(1:length(info{a,1}),id);
+            if(any(dbs))
+                warning('Duplicates found for animal %s:',mouse)
+                dbsid = find(dbs);
+                for k=dbsid
+                    fprintf('bregma %d found in lines %s\n',info{a,1}(k),num2str(find(info{a,1}==info{a,1}(k))'));
+                end
+                
+            end
             a = a + 1;
         end
     end
