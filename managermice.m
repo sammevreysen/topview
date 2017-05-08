@@ -300,15 +300,25 @@ function drawpermouse(hObject,handles,view)
         end
     end
    
-    for i=1:size(handles.topview.micenames,1)
-        mouse = handles.topview.micenames{i};
+    %mice selection
+    tmp = get(handles.uitable,'Data');
+    tmp = cell2table(tmp);
+    tmp.Properties.VariableNames = {'Select','Mouse','Condition','APrange','Hemisphere','Normarea'};
+    if(all(tmp.Select) || ~any(tmp.Select))
+        miceselection = handles.topview.micenames;
+    else
+        miceselection = handles.topview.micenames(tmp.Select);
+    end
+            
+    for i=1:size(miceselection,1)
+        mouse = miceselection{i};
         hemisphere = handles.topview.mice.(mouse).hemisphere;
         for j=1:length(suporinfra)
             figure(fig(j));
             if(handles.topview.noLayers > 1)
-                figsub(j,i) = subplot(size(handles.topview.micenames,1),handles.topview.noLayers+1,(i-1)*(handles.topview.noLayers+1)+1);
+                figsub(j,i) = subplot(size(miceselection,1),handles.topview.noLayers+1,(i-1)*(handles.topview.noLayers+1)+1);
             else
-                figsub(j,i) = subplot(ceil(size(handles.topview.micenames,1)/4),min(size(handles.topview.micenames,1),4),i);
+                figsub(j,i) = subplot(ceil(size(miceselection,1)/4),min(size(miceselection,1),4),i);
             end
                 
             if(~isfield(handles.topview.mice.(mouse),['normalizefactor_' suporinfra{j}]))
