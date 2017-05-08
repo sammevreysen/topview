@@ -368,7 +368,7 @@ function drawpermouse(hObject,handles,view)
                             title([mouse ' - ' suporinfra{j}]);
                         end
                         for k=1:handles.topview.noLayers
-                            subplot(size(handles.topview.micenames,1),handles.topview.noLayers+1,(i-1)*(handles.topview.noLayers+1)+1+k)
+                            subplot(size(miceselection,1),handles.topview.noLayers+1,(i-1)*(handles.topview.noLayers+1)+1+k)
                             imagesc(xi(1,:)/100,-yi(:,1)/100,interpolprojected(:,:,k));
                             hold on;
                             if(strcmp(view,'topview'))
@@ -377,7 +377,8 @@ function drawpermouse(hObject,handles,view)
                                 plot(handles.topview.generalmodel.(hemisphere).(['areas_' suporinfra{j}])./100,-handles.topview.bregmas/100,'k-');
                             end
                             hold off;
-                            colormap gray;
+                            colormap jet;
+                            caxis([0 100]);
                             axis xy equal tight;
                             set(gca, 'Uicontextmenu',cmenu(j));
                             set(gca,'Tag','gray');
